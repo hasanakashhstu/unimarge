@@ -10,8 +10,7 @@ Route::middleware('auth')->group(function () {
     Route::post('tinymce/upload-image', [TinyMceEditorController::class, 'uploadImage'])->name('tinymce.uploadImage');
 
     Route::prefix('auth')->name('auth.')->group(function() {
-        Route::resource('metaData', MetaDataController::class)->except('show', 'destroy');
-        Route::get('metaData/{metaData}/update-status', [MetaDataController::class, 'updateStatus'])->name('metaData.updateStatus');
+        Route::resource('metaData', MetaDataController::class)->except('create', 'show', 'destroy');
         Route::resource('otherFees', OtherFeeController::class)->except('show');
     });
 });

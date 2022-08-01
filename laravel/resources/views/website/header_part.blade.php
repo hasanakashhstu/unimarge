@@ -19,7 +19,7 @@
              ?>
              <div class="col-md-6 d-none d-md-inline-block">
                  <ul class="topbar-right social-media text-md-right text-center">
-                     <a class="olc" href="#">Online Admission &nbsp;&nbsp;</a>
+                     <a class="olc" href="/frontend/online-admission">Apply Now &nbsp;&nbsp;</a>
                      <a class="olc" href="#">Live Class &nbsp;&nbsp;</a>
                      <a class="olc" href="#">Certificate &nbsp;&nbsp;</a>
                      <a class="olc" href="#">Convovation &nbsp;&nbsp;</a>

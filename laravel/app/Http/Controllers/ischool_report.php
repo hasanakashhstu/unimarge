@@ -51,18 +51,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PDF;
 use Session;
+use DB;
 
-class ischool_report extends Controller
-{
-    public function applicant_student_report()
-    {
+class ischool_report extends Controller {
+
+    public function applicant_student_report() {
         abort_if(Auth::user()->cannot('view student'), 403);
+        $data['applicant_student'] = DB::table('applicant_student')
+                ->join('manage_department', 'manage_department.id', '=', 'applicant_student.department')
+                ->select('applicant_student.*', 'manage_department.department_name')
+                ->orderBy('applicant_id', 'desc')
+                ->get();
 
-        return view('admin.students.applicant_student_report', ['applicant_student' => aplicant_student_model::orderBy('applicant_id', 'desc')->get()]);
+
+        return view('admin.students.applicant_student_report', $data);
     }
 
-    public function applicant_student_admit_card(Request $request)
-    {
+    public function applicant_student_admit_card(Request $request) {
         date('H:i:s', time());
         $system_name = Session::get('school.system_name');
         $school_eiin = Session::get('school.school_eiin');
@@ -159,8 +164,8 @@ class ischool_report extends Controller
 
         echo $markshet;
     }
-    public function student_print($roll)
-    {
+
+    public function student_print($roll) {
         $students_parents_info = students::select('parent_name')->where('roll', $roll)->first();
 
         $student_child_info = students_child::select('roll')->where('roll', $roll)->first();
@@ -171,8 +176,8 @@ class ischool_report extends Controller
         if ($student_child_info && $students_parents_info) {
 
             $data = students::join('students_child', 'students.roll', '=', 'students_child.roll')
-                ->join('parents_info', 'students.parent_name', '=', 'parents_info.parent_id')
-                ->where('students.roll', $roll)->first();
+                            ->join('parents_info', 'students.parent_name', '=', 'parents_info.parent_id')
+                            ->where('students.roll', $roll)->first();
 
             return view('admin.students.student_print', ['student_data' => $data, 'educational_info' => $educational_info, 'office_copy_data' => $office_copy_data, 'hem_info' => $hem_info]);
         } else {
@@ -180,8 +185,7 @@ class ischool_report extends Controller
         }
     }
 
-    public function teacher_info_report()
-    {
+    public function teacher_info_report() {
         abort_if(Auth::user()->cannot('view teacher'), 403);
 
         $data['teacher_report'] = Teacher::where('status', 'teacher')->latest()->get();
@@ -189,8 +193,7 @@ class ischool_report extends Controller
         return view('admin.Teacher_Staff.teacher_report', $data);
     }
 
-    public function teacher_sort_update(Request $request)
-    {
+    public function teacher_sort_update(Request $request) {
         $array = $request->all_teacher_data;
         if (count($array) > 0) {
             foreach ($array as $sort) {
@@ -205,31 +208,29 @@ class ischool_report extends Controller
         return response()->json(['status' => 2000, 'message' => 'Successfully Updated'], 200);
     }
 
-    public function parentreport()
-    {
+    public function parentreport() {
         abort_if(Auth::user()->cannot('view parent'), 403);
 
         return view('admin.Parents.parent_report', ['parents_info' => parents_info_model::all()]);
     }
-    public function staff_report()
-    {
+
+    public function staff_report() {
         return view('admin.Teacher_Staff.staff_report', ['staff_information' => teacher_model::where('status', 'staff')->get()]);
     }
-    public function daily_attendance_report()
-    {
+
+    public function daily_attendance_report() {
         abort_if(Auth::user()->cannot('view attendence'), 403);
 
         $medium = ov_setup_model::where('type', 'Medium')->get();
         $session = ov_setup_model::where('type', 'Session')->get();
         return view('admin.Attendance.daily_attendance_report', ['class_data' => manage_class_model::all(), 'general' => general_settings_model::first(), 'medium' => $medium, 'session_get' => $session]);
     }
-    public function payment_history()
-    {
+
+    public function payment_history() {
         return view('admin.Account.payment_history');
     }
 
-    public function tabulation_sheet()
-    {
+    public function tabulation_sheet() {
         abort_if(Auth::user()->cannot('view report'), 403);
 
         $class = manage_class_model::all();
@@ -239,8 +240,7 @@ class ischool_report extends Controller
         return view('admin.exam.tabulation_sheet', ['class' => $class, 'exam' => $exam, 'default_session' => $default_session, 'all_session' => $all_session]);
     }
 
-    public function tabulation_data_get(Request $request)
-    {
+    public function tabulation_data_get(Request $request) {
 
         abort_if(Auth::user()->cannot('view report'), 403);
 
@@ -269,10 +269,10 @@ class ischool_report extends Controller
             $total_mark = 0;
             foreach ($subject_data as $subject_data_mark_disto) {
                 $t = manage_mark_general_details_model::leftJoin('manage_subject', 'mark_general_details.subject', '=', 'manage_subject.id')
-                    ->where('mark_general_details.class_name', $request->input('class_name'))
-                    ->where('mark_general_details.exam_name', $request->input('exam_name'))
-                    ->where('mark_general_details.subject', $subject_data_mark_disto->id)
-                    ->first();
+                        ->where('mark_general_details.class_name', $request->input('class_name'))
+                        ->where('mark_general_details.exam_name', $request->input('exam_name'))
+                        ->where('mark_general_details.subject', $subject_data_mark_disto->id)
+                        ->first();
                 $t['mark'] = manage_mark_component_details_model::where('general_details_id', $t['general_details_id'])->where('roll', $student_data_value->roll)->sum('component_mark');
 
                 $mark_find = isset($t["mark"]) && $t["mark"] > 0 ? $t["mark"] : 0;
@@ -298,19 +298,17 @@ class ischool_report extends Controller
         $table .= "</table>";
         echo $table;
     }
-    
-    public function student_apprisal_report()
-    {
+
+    public function student_apprisal_report() {
         $apprisal = apprisals::all();
         return view('admin.apprisal.student_apprisal_report', ['apprisals' => $apprisal]);
     }
-    public function create_admin_report()
-    {
+
+    public function create_admin_report() {
         return view('admin.RBAC.create_admin_report');
     }
 
-    public function accountant_excle()
-    {
+    public function accountant_excle() {
 
         Excel::create('Account Report Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -321,16 +319,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function accountant_pdf()
-    {
+    public function accountant_pdf() {
 
         $html = view('admin.Account.Export.accountant_pdf', ['accountet_list' => accountant_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function expense_excel()
-    {
+    public function expense_excel() {
 
         Excel::create('Expense Report Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -341,16 +337,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function expense_pdf()
-    {
+    public function expense_pdf() {
 
         $html = view('admin.Account.Export.expense_pdf', ['expense_info' => expense_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function salary_slip_report_excle()
-    {
+    public function salary_slip_report_excle() {
 
         Excel::create('Salary Slip Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -361,16 +355,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function salary_slip_report_pdf()
-    {
+    public function salary_slip_report_pdf() {
 
         $html = view('admin.payroll.Export.salary_slip_report_pdf', ['salary_slip_info' => salary_slip_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function invoice_excel()
-    {
+    public function invoice_excel() {
 
         Excel::create('Invoice Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -381,16 +373,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function invoice_pdf()
-    {
+    public function invoice_pdf() {
 
         $html = view('admin.Account.Export.invoice_pdf', ['invoice_data' => invoice_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function invoice_component_excel()
-    {
+    public function invoice_component_excel() {
 
         Excel::create('Invoice Component Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -401,16 +391,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function invoice_component_pdf()
-    {
+    public function invoice_component_pdf() {
 
         $html = view('admin.Account.Export.invoice_component_pdf', ["invoice_component_data" => invoice_component_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function chart_of_account_excel()
-    {
+    public function chart_of_account_excel() {
 
         Excel::create('Chart of Account Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -421,16 +409,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function chart_of_account_pdf()
-    {
+    public function chart_of_account_pdf() {
 
         $html = view('admin.Account.Export.chart_of_account_pdf', ['accounts' => chart_of_accounts_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function create_admin_Excel_report()
-    {
+    public function create_admin_Excel_report() {
 
         Excel::create('Admin Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -441,19 +427,16 @@ class ischool_report extends Controller
         })->export('xls');
         // $data=create_admin_model::all();
         // return view('admin.RBAC.create_admin_excel_report',['create_admin_data'=>$data]);
-
     }
 
-    public function create_admin_pdf_report()
-    {
+    public function create_admin_pdf_report() {
         $data = create_admin_model::all();
         $html = view('admin.RBAC.create_admin_report', ['create_admin_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function route_excle()
-    {
+    public function route_excle() {
 
         Excel::create('Route Excle', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -464,19 +447,16 @@ class ischool_report extends Controller
         })->export('xls');
         // $data=create_admin_model::all();
         // return view('admin.RBAC.create_admin_excel_report',['create_admin_data'=>$data]);
-
     }
 
-    public function route_pdf()
-    {
+    public function route_pdf() {
 
         $html = view('admin.Transport.Export.route_pdf', ['route_info' => route_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function assign_transport_excle()
-    {
+    public function assign_transport_excle() {
 
         Excel::create('Assign Transport Excle', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -486,24 +466,22 @@ class ischool_report extends Controller
             });
         })->export('xls');
     }
-    public function assign_transport_pdf()
-    {
+
+    public function assign_transport_pdf() {
 
         $html = view('admin.Transport.Export.assign_transport_pdf', ['assign_transport' => assign_transport_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function manage_transport_pdf()
-    {
+    public function manage_transport_pdf() {
 
         $html = view('admin.Transport.Export.manage_transport_pdf', ['manage_transport_info' => manage_transport_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function manage_transport_excle()
-    {
+    public function manage_transport_excle() {
 
         Excel::create('Manage Transport Excle', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -514,22 +492,21 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function staff_report_pdf()
-    {
+    public function staff_report_pdf() {
         $data = teacher_model::where('status', 'staff')->get();
         $html = view('admin.Teacher_Staff.Export.staff_report_pdf', ['staff_report_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
-    public function teacher_report_pdf()
-    {
+
+    public function teacher_report_pdf() {
         $data = teacher_model::where('status', 'teacher')->get();
         $html = view('admin.Teacher_Staff.Export.teacher_report_pdf', ['teacher_report_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
-    public function teacher_report_excle()
-    {
+
+    public function teacher_report_excle() {
 
         Excel::create('Teacher Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -539,8 +516,7 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function staff_report_excle()
-    {
+    public function staff_report_excle() {
 
         Excel::create('Staff Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -550,8 +526,7 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function daily_attendance_pdf()
-    {
+    public function daily_attendance_pdf() {
         // $student_info=students::where('class',$request->class_name)
         //          ->Where('section',$request->section)
         //          ->Where('department',$request->Department_info)->get();
@@ -561,40 +536,30 @@ class ischool_report extends Controller
         //      $found_date_diff=date_diff($date1,$date2);
         //      $date_diff=$found_date_diff->format('%d');
         //      $from_date=$request->from_date_info;
-
         //       $from_date=date('d-m-Y',strtotime($from_date));
-
         //       $table="<table class=\"table table-bordered data-table\">";
         //          $table.="<thead>";
         //              $table.="<tr>";
         //                   $table.="<th>Student Name</th>";
         //                  $table.="<th>Roll</th>";
-
         //                  for ($i=0;$i<$date_diff;$i++){
         //                      $calculate_date = strtotime($from_date . ' +1 day');
         //                      $from_date=date('d-m-Y',$calculate_date);
-
         //                   $table.="<th class=\"date\">$from_date</th>";
         //                   }
-
         //              $table.="</tr>";
         //          $table.="</thead>";
         //          $table.="<tbody>";
-
         //            foreach ($student_info as $value) {
         //              $table.="<tr>";
         //                  $table.="<td>$value->student_name</td>";
         //                  $table.="<td>$value->roll</td>";
-
         //                  $request_date=$request->from_date_info;
-
         //                  for ($i=0;$i<$date_diff;$i++)
         //                   {
         //                      $a = strtotime($request_date . ' +1 day');
         //                      $request_date=date('d-m-Y',$a);
-
         //                        $match_values=daily_attendance_model::where('student_id',$value->roll)->where('date',$request_date)->where('status','Present')->first();
-
         //                       if($match_values)
         //                       {
         //                           $table.="<td><input type=\"checkbox\" checked/></td>";
@@ -604,9 +569,7 @@ class ischool_report extends Controller
         //                           $table.="<td><input type=\"checkbox\"/></td>";
         //                       }
         //                   }
-
         //          }
-
         //          $table.="</tbody>";
         //      $table.="</table>";
 
@@ -615,16 +578,14 @@ class ischool_report extends Controller
         return PDF::load($html)->show();
     }
 
-    public function templete_article_pdf()
-    {
+    public function templete_article_pdf() {
         $data = templet_article_model::all();
         $html = view('admin.Libray.Export.templete_article_pdf', ['templet_article_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function templete_article_excle()
-    {
+    public function templete_article_excle() {
 
         Excel::create('Templete Article Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -633,16 +594,15 @@ class ischool_report extends Controller
             });
         })->export('xls');
     }
-    public function stock_article_pdf()
-    {
+
+    public function stock_article_pdf() {
         $data = stock_article_model::all();
         $html = view('admin.Libray.Export.stock_article_pdf', ['stock_article_info' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function stock_article_excle()
-    {
+    public function stock_article_excle() {
 
         Excel::create('Stock Article Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -652,16 +612,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function article_pdf()
-    {
+    public function article_pdf() {
         $data = article_model::all();
         $html = view('admin.Libray.Export.article_pdf', ['article_info' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function article_excle()
-    {
+    public function article_excle() {
 
         Excel::create(' Article Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -671,16 +629,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function membership_pdf()
-    {
+    public function membership_pdf() {
         $data = membership_model::all();
         $html = view('admin.Libray.Export.membership_pdf', ['membership_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function membership_excle()
-    {
+    public function membership_excle() {
 
         Excel::create('Membership Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -690,16 +646,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function article_issue_pdf()
-    {
+    public function article_issue_pdf() {
         $data = article_issue_model::where('status', 'Issue')->get();
         $html = view('admin.Libray.Export.article_issue_pdf', ['article_issue_info' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function article_issue_excle()
-    {
+    public function article_issue_excle() {
 
         Excel::create(' Article Issue Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -709,16 +663,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function article_recive_pdf()
-    {
+    public function article_recive_pdf() {
         $data = article_issue_model::where('status', 'Recived')->get();
         $html = view('admin.Libray.Export.article_recive_pdf', ['article_recive_info' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function article_recive_excle()
-    {
+    public function article_recive_excle() {
 
         Excel::create(' Article Recived Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -728,15 +680,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function manage_dormitory_pdf()
-    {
+    public function manage_dormitory_pdf() {
         $data = dormitory_model::all();
         $html = view('admin.Dormitory.Export.manage_dormitory_pdf', ['dormitory_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
-    public function manage_dormitory_excle()
-    {
+
+    public function manage_dormitory_excle() {
 
         Excel::create('Manage Dormitory Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -746,8 +697,7 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function assign_dormitory_excle()
-    {
+    public function assign_dormitory_excle() {
 
         Excel::create('Assign Dormitory Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -757,15 +707,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function assign_dormitory_pdf()
-    {
+    public function assign_dormitory_pdf() {
         $data = assign_dormitory_model::all();
         $html = view('admin.Dormitory.Export.assign_dormitory_pdf', ['assign_dormitory_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
-    public function academic_syllabus_download($class, $subject)
-    {
+
+    public function academic_syllabus_download($class, $subject) {
         if (Entrust::can('ACADEMIC_SYLLABUS')) {
             $id = $class . "_" . $subject;
             if (file_exists("img/backend/academic_syllabus/$id.pdf")) {
@@ -779,16 +728,14 @@ class ischool_report extends Controller
         }
     }
 
-    public function create_role_pdf_report()
-    {
+    public function create_role_pdf_report() {
         $data = Role::all();
         $html = view('admin.RBAC.Export.create_role_pdf', ['role_data' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function create_role_Excel_report()
-    {
+    public function create_role_Excel_report() {
 
         Excel::create('Role Excel', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
@@ -798,15 +745,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function manage_section_pdf()
-    {
+    public function manage_section_pdf() {
         $html = view('admin.class.Export.manage_section_pdf', ['section_list' => manage_section_model::all(), 'groupby_class' => manage_section_model::groupby('class')->get()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function manage_section_excle()
-    {
+    public function manage_section_excle() {
         Excel::create('Manage Section Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -815,15 +760,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function manage_department_pdf()
-    {
+    public function manage_department_pdf() {
         $html = view('admin.class.Export.manage_department_pdf', ['department' => manage_department_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function manage_department_excle()
-    {
+    public function manage_department_excle() {
         Excel::create('Manage Department Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -832,16 +775,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function role_based_permission_pdf_report()
-    {
+    public function role_based_permission_pdf_report() {
         $data = permission_role_model::groupby('role_id')->get();
         $html = view('admin.RBAC.Export.role_based_permission_pdf', ['role_based_permission' => $data])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function role_permission_excel()
-    {
+    public function role_permission_excel() {
         Excel::create('Role Based Permission', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -851,16 +792,14 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function user_access_export()
-    {
+    public function user_access_export() {
 
         $html = view('admin.RBAC.Export.user_access_export_pdf', ['user_access' => user_access_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function user_access_export_excel()
-    {
+    public function user_access_export_excel() {
         Excel::create('User Access Excel Sheet', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -869,15 +808,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function parents_report_pdf()
-    {
+    public function parents_report_pdf() {
         $html = view('admin.Parents.Export.parents_report_export_as_pdf', ['parents_info' => parents_info_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function parents_report_excel()
-    {
+    public function parents_report_excel() {
         Excel::create('Parents Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -886,15 +823,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function component_pdf()
-    {
+    public function component_pdf() {
         $html = view('admin.subject.Export.component_pdf', ['component_data' => component_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function component_excel()
-    {
+    public function component_excel() {
         Excel::create('Component Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -902,15 +837,14 @@ class ischool_report extends Controller
             });
         })->export('xls');
     }
-    public function manage_class_pdf()
-    {
+
+    public function manage_class_pdf() {
         $html = view('admin.class.Export.class_report_pdf', ['manage_class' => manage_class_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function manage_class_excel()
-    {
+    public function manage_class_excel() {
         Excel::create('Class Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -919,15 +853,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function applicant_student_pdf()
-    {
+    public function applicant_student_pdf() {
         $html = view('admin.students.Export.applicant_student_pdf_report', ['applicant_student' => aplicant_student_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function applicant_student_excel()
-    {
+    public function applicant_student_excel() {
         Excel::create('Applicant Student', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -936,15 +868,13 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function academic_syllabus_pdf()
-    {
+    public function academic_syllabus_pdf() {
         $html = view('admin.class.Export.academic_syllabus_pdf', ['academic_syllabus' => academic_syllebus_model::all()])->render();
 
         return PDF::load($html)->show();
     }
 
-    public function academic_syllabus_excle()
-    {
+    public function academic_syllabus_excle() {
         Excel::create('Academic Syllabus Report', function ($excel) {
             $excel->sheet('Excel sheet', function ($sheet) {
                 $sheet->setOrientation('landscape');
@@ -953,16 +883,15 @@ class ischool_report extends Controller
         })->export('xls');
     }
 
-    public function admission_test_student(Request $request)
-    {
+    public function admission_test_student(Request $request) {
 
         $addmission_student_list = aplicant_student_model::where('admission_test', $request->addmission_test)
-            ->where('department', $request->department)
-            ->where('session', $request->session)
-            ->where('shift', $request->shift)
-            ->where('batch', $request->batch)
-            ->where('medium', $request->medium)
-            ->where('status', 'Applicant')->get();
+                        ->where('department', $request->department)
+                        ->where('session', $request->session)
+                        ->where('shift', $request->shift)
+                        ->where('batch', $request->batch)
+                        ->where('medium', $request->medium)
+                        ->where('status', 'Applicant')->get();
 
         $table = "<table class=\"table table-bordered table-striped\">";
         $table .= "<thead>";
@@ -1022,8 +951,7 @@ class ischool_report extends Controller
         echo $table;
     }
 
-    public function Class_w_section_filter(Request $request)
-    {
+    public function Class_w_section_filter(Request $request) {
 
         echo "<option value=''>Choose Section Name</option>";
         $section_data = manage_section_model::groupby('section_name')->where('class', $request->class_name)->get();
@@ -1033,8 +961,7 @@ class ischool_report extends Controller
         }
     }
 
-    public function class_w_department_filter(Request $request)
-    {
+    public function class_w_department_filter(Request $request) {
 
         $department_data = manage_department_model::groupby('department_name')->where('class_name', $request->class_name)->get();
         echo "<option value=''>Choose Department Name</option>";
@@ -1043,39 +970,37 @@ class ischool_report extends Controller
         }
     }
 
-    public function department_wise_subject_get(Request $request)
-    {
+    public function department_wise_subject_get(Request $request) {
         $subject_data = manage_subject_model::where('class', $request->class_name)
-            ->where('section', $request->section_info)
-            ->where('department', $request->department)
-            ->get();
+                ->where('section', $request->section_info)
+                ->where('department', $request->department)
+                ->get();
         echo "<option value=''>Choose Subject</option>";
         foreach ($subject_data as $subject_data_table) {
             echo "<option value='$subject_data_table->id'>$subject_data_table->subject_name</option>";
         }
     }
 
-    public function apprisal_template_report()
-    {
+    public function apprisal_template_report() {
 
         return view('admin.apprisal.Report.apprisal_template_report', ['student_apprisal_report' => apprisal_component_model::all()]);
     }
-    public function notice_board_student_data_get(Request $request)
-    {
+
+    public function notice_board_student_data_get(Request $request) {
 
         return students::where('roll', $request->student_roll)->first();
     }
-    public function teacher_data_get_for_library(Request $request)
-    {
+
+    public function teacher_data_get_for_library(Request $request) {
         return teacher_model::where('employment_id', $request->teacher_id)->where('status', 'Teacher')->first();
     }
-    public function class_data_check(Request $request)
-    {
+
+    public function class_data_check(Request $request) {
 
         return manage_class_model::where('class_name', $request->class_name)->first();
     }
-    public function class_wise_subject(Request $request)
-    {
+
+    public function class_wise_subject(Request $request) {
 
         $subject_data = manage_subject_model::where('class', $request->class_name)->get();
         // echo "<option>Choose Subject</option>";
@@ -1084,8 +1009,7 @@ class ischool_report extends Controller
         }
     }
 
-    public function class_wise_department(Request $request)
-    {
+    public function class_wise_department(Request $request) {
 
         $department_data = manage_department_model::where('class_name', $request->class_name)->get();
         // echo "<option>Choose Subject</option>";
@@ -1095,72 +1019,61 @@ class ischool_report extends Controller
     }
 
     //   return students::where('roll',$request->student_roll)->first();
-
     // }
-    public function student_data_get(Request $request)
-    {
+    public function student_data_get(Request $request) {
         return students::where('roll', $request->student_roll)->first();
     }
 
-    public function route_wise_data(Request $request)
-    {
+    public function route_wise_data(Request $request) {
         return route_model::where('name', $request->route_name)->first();
     }
-    public function transport_wise_data(Request $request)
-    {
+
+    public function transport_wise_data(Request $request) {
         return manage_transport_model::where('name_of_transport', $request->name_transport)->first();
     }
 
-    public function member_wise_data(Request $request)
-    {
+    public function member_wise_data(Request $request) {
         return membership_model::where('roll_number', $request->roll_number)->first();
     }
-    public function member_wise_teacher_data(Request $request)
-    {
+
+    public function member_wise_teacher_data(Request $request) {
         return membership_model::where('teacher_id', $request->teacher_id)->first();
     }
 
-    public function article_id_wise_data(Request $request)
-    {
+    public function article_id_wise_data(Request $request) {
 
         return article_model::where('accession_code', $request->article_id)->first();
     }
-    public function article_id_issue_data(Request $request)
-    {
+
+    public function article_id_issue_data(Request $request) {
         return article_issue_model::where('article_id', $request->article_id)->where('status', 'Issue')->first();
     }
 
-    public function article_filter_data(Request $request)
-    {
+    public function article_filter_data(Request $request) {
         return templet_article_model::where('article_name', $request->article_name)->first();
     }
 
-    public function notice_board_teacher_data_get(Request $request)
-    {
+    public function notice_board_teacher_data_get(Request $request) {
         return teacher_model::where('teacher_name', $request->teacher_name)->first();
     }
 
-    public function notice_board_class_data_get(Request $request)
-    {
+    public function notice_board_class_data_get(Request $request) {
         return manage_department_model::join('manage_section', 'manage_department.class_name', '=', 'manage_section.class')
-            ->where('manage_department.class_name', $request->class_name)->first();
+                        ->where('manage_department.class_name', $request->class_name)->first();
     }
 
-    public function notice_board_parents_data_get(Request $request)
-    {
+    public function notice_board_parents_data_get(Request $request) {
         return parents_info_model::where('name', $request->parents_name)->first();
     }
 
-    public function notice_board_students_data_get(Request $request)
-    {
+    public function notice_board_students_data_get(Request $request) {
         return students::join('parents_info', 'students.parent_name', '=', 'parents_info.parent_id')
-            ->where('students.roll', $request->student_roll)->first();
+                        ->where('students.roll', $request->student_roll)->first();
 
         //return students::where('roll',$request->student_roll)->first();
     }
 
-    public function salary_structure_teacher_name()
-    {
+    public function salary_structure_teacher_name() {
         $teacer_name = teacher_model::all();
 
         foreach ($teacer_name as $teacer_name_data) {
@@ -1168,8 +1081,7 @@ class ischool_report extends Controller
         }
     }
 
-    public function class_w_subject_filter(Request $request)
-    {
+    public function class_w_subject_filter(Request $request) {
 
         $subject_name = manage_subject_model::where('class', $request->class_name)->get();
         echo "<option>Chose Subject Name</option>";
@@ -1178,12 +1090,12 @@ class ischool_report extends Controller
         }
     }
 
-    public function class_w_subject_filter_another(Request $request)
-    {
+    public function class_w_subject_filter_another(Request $request) {
         $subject_name = manage_subject_model::where('class', $request->class_name)->get();
         echo "<option>Chose Subject Name</option>";
         foreach ($subject_name as $subject_name_data) {
             echo "<option value=" . $subject_name_data->id . ">$subject_name_data->subject_name</option>";
         }
     }
+
 }

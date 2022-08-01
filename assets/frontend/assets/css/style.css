@@ -3023,6 +3023,7 @@ ul {
 .single-team-inner .thumb img {
   transition: 0.7s;
   width: 100%;
+  height: 230px !important;
 }
 .single-team-inner .details {
   background: var(--main-color);

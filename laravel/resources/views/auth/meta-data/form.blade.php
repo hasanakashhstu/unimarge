@@ -43,22 +43,12 @@
                         <div class="control-group">
                             <label for="meta_key">Meta Key</label>
                             <div class="controls">
-                                <input type="text" readonly name="meta_key" value="{{ $metaInfo->meta_key }}">
+                                <input readonly type="text" name="meta_key" value="{{ $metaInfo->meta_key }}">
                                 @error('meta_key')
                                     <p style="color: red;"><strong>{{ $message }}</strong></p>
                                 @enderror
                             </div>
                         </div>
-
-                        {{-- <div class="control-group">
-                            <label for="title">Title</label>
-                            <div class="controls">
-                                <input type="text" name="title" value="{{ $metaInfo->title }}">
-                                @error('title')
-                                    <p style="color: red;"><strong>{{ $message }}</strong></p>
-                                @enderror
-                            </div>
-                        </div> --}}
 
                         <div class="control-group">
                             {{ Form::label('meta_value', 'Meta Value', ['class' => 'control-label']) }}
@@ -69,16 +59,6 @@
                                 @enderror
                             </div>
                         </div>
-
-                        {{-- <div class="control-group">
-                            <label for="sort_order">Sort Order</label>
-                            <div class="controls">
-                                <input type="number" min="1" name="sort_order" value="{{ $metaInfo->sort_order }}">
-                                @error('sort_order')
-                                    <p style="color: red;"><strong>{{ $message }}</strong></p>
-                                @enderror
-                            </div>
-                        </div> --}}
 
                         <div class="modal-footer">
                             <button type="submit" class='btn btn-success' id='edit_submit_button'

@@ -15,16 +15,7 @@ class MetaData extends Model
      * @var array
      */
     protected $fillable = [
-        'meta_type',
         'meta_key',
-        'title',
         'meta_value',
-        'sort_order',
-        'status',
     ];
-
-    public function getStatus()
-    {
-        return $this->status == 1 ? 'Active' : 'Deactivate';
-    }
 }

@@ -8,19 +8,23 @@ use App\manage_department_model;
 use App\Services\StorageService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
-class WebsiteNewsController extends Controller
-{
+class WebsiteNewsController extends Controller {
+
     use StorageService;
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        $data['newsList'] = WebsiteNewsModel::latest('website_news_id')->get();
-        $data['departments'] = manage_department_model::all();
+    public function index() {
+        $data['newsList'] = DB::table('website_news')
+                ->join('manage_department', 'manage_department.id', '=', 'website_news.department')
+                ->select('website_news.*', 'manage_department.department_name as name')
+                ->get();
+
         return view('website.backend.index_news', $data);
     }
 
@@ -29,8 +33,7 @@ class WebsiteNewsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
+    public function create() {
         $data['departments'] = manage_department_model::all();
         return view('website.backend.add_news', $data);
     }
@@ -41,8 +44,7 @@ class WebsiteNewsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $websiteNews = new WebsiteNewsModel;
         $validation = Validator::make($request->all(), $websiteNews->validation());
         if ($validation->fails()) {
@@ -63,8 +65,7 @@ class WebsiteNewsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
+    public function show($id) {
         //
     }
 
@@ -74,8 +75,7 @@ class WebsiteNewsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
+    public function edit($id) {
         $data['news'] = WebsiteNewsModel::findOrFail($id);
         $data['departments'] = manage_department_model::all();
         return view('website.backend.edit_news', $data);
@@ -88,8 +88,7 @@ class WebsiteNewsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $websiteNews = WebsiteNewsModel::findOrFail($id);
         $validation = Validator::make($request->all(), $websiteNews->validation(true));
         if ($validation->fails()) {
@@ -111,11 +110,11 @@ class WebsiteNewsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
+    public function destroy($id) {
         $websiteNews = WebsiteNewsModel::findOrFail($id);
         $websiteNews->file && Storage::delete($websiteNews->file);
         $websiteNews->delete();
         return redirect()->back()->with('success', 'News Deleted Successfully!');
     }
+
 }

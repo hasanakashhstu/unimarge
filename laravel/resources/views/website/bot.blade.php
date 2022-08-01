@@ -19,10 +19,10 @@
                 <div class="row">
                     <div class="col-lg-4">
                         <div class="thumb">
-                            <img src='{{ Storage::url($bot_chairman->image) }}' alt="img">
+                            <img src="{{ asset('img/backend/bot/'.$bot_chairman->image) }}" />
                         </div>
                     </div>
-                    <div class="col-lg-4 align-self-center">
+                    <div class="col-lg-4 ">
                         <div class="details">
                             <h3 class="mb-1">{{ $bot_chairman->name }}</h3>
                             <p class="">{{ $bot_chairman->designation }}</p>
@@ -95,30 +95,37 @@
 
                 <h2 class="mb-5">Members, Board of Trustees</h2>
                 <div class="row">
-                    @foreach ($bot as $key => $value)
+                    @foreach ($bot as $key => $bot_value)
+
+                        <?php 
+                            // echo '<pre>';
+                            // print_r($bot_value);
+                            // echo die;
+
+                        ?>
                         <div class="col-lg-4 col-sm-6">
                             <div class="single-team-inner text-center">
                                 <div class="thumb">
-                                    <img src='{{ Storage::url($value->image) }}' alt="img">
+                                    <img src="{{ asset('img/backend/bot/'.$bot_value->image) }}" /> 
                                 </div>
                                 <div class="details">
-                                    <h5><a href="#">{{ $value->name }}</a></h5>
-                                    <p>{{ $value->designation }}</p>
+                                    <h5><a href="#">{{ $bot_value->name }}</a></h5>
+                                    <p>{{ $bot_value->designation }}</p>
                                     <ul class="social-media">
                                         <li>
-                                            <a href="{{ $value->facebook }}"><i class="fa fa-facebook"
+                                            <a href="{{ $bot_value->facebook }}"><i class="fa fa-facebook"
                                                     aria-hidden="true" style="line-height: 32px;"></i></a>
                                         </li>
                                         <li>
-                                            <a href="{{ $value->twitter }}"><i class="fa fa-twitter"
+                                            <a href="{{ $bot_value->twitter }}"><i class="fa fa-twitter"
                                                     aria-hidden="true" style="line-height: 32px;"></i></a>
                                         </li>
                                         <li>
-                                            <a href="{{ $value->instagram }}"><i class="fa fa-instagram"
+                                            <a href="{{ $bot_value->instagram }}"><i class="fa fa-instagram"
                                                     aria-hidden="true" style="line-height: 32px;"></i></a>
                                         </li>
                                         <li>
-                                            <a href="{{ $value->pinterest }}"><i class="fa fa-pinterest"
+                                            <a href="{{ $bot_value->pinterest }}"><i class="fa fa-pinterest"
                                                     aria-hidden="true" style="line-height: 32px;"></i></a>
                                         </li>
                                     </ul>

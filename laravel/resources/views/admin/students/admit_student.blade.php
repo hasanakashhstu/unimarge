@@ -639,14 +639,14 @@
                                 <div class="control-group">
                                     {{ Form::label('Faculty', 'Faculty', ['class' => 'control-label', 'title' => 'Faculty']) }}
                                     <div class="controls">
-                                        @php $medium_array=[''=>'--select--'] @endphp
+                                      
                                         @foreach ($medium as $medium_list)
                                             @php $medium_array[$medium_list->type_name]=$medium_list->type_name @endphp
                                         @endforeach
 
 
                                         <select name="medium" class="medium" id="medium">
-                                            <option>--Select--</option>
+                                          
                                             @foreach ($medium as $medium_list)
                                                 <option value="{{ $medium_list->id }}">{{ $medium_list->type_name }}
                                                 </option>
@@ -674,7 +674,7 @@
                                 <div class="control-group">
                                     {{ Form::label('program', 'Program', ['class' => 'control-label', 'title' => 'program']) }}
                                     <div class="controls">
-                                        @php $class=[''=>'--select--'] @endphp
+                                      
                                         @foreach ($manage_class as $manage_class_list)
                                             @php $class[$manage_class_list->class_name]=$manage_class_list->class_name @endphp
                                         @endforeach
@@ -698,7 +698,7 @@
                                 <div class="control-group">
                                     {{ Form::label('Shift', 'Shift', ['class' => 'control-label', 'title' => 'batcg']) }}
                                     <div class="controls">
-                                        @php $shift_list_array=[''=>'--select--'] @endphp
+                                      
                                         @foreach ($shift as $shift_list)
                                             @php $shift_list_array[$shift_list->type_name]=$shift_list->type_name @endphp
                                         @endforeach

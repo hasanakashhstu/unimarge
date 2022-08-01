@@ -12,6 +12,7 @@
             font-weight: 400;
             margin-top: 0rem;
         }
+
     </style>
 
     <!-- content start -->
@@ -41,6 +42,13 @@
                         <div class="row">
                             <div class="col-lg-4">
                                 <div class="thumb">
+                                    <?php 
+
+                                        // echo '<pre>';
+                                        // print_r($department->image);
+                                        // die;
+                                    
+                                    ?>
                                     @if ($department->departmentHead)
                                         <img src="{{ Storage::url($department->departmentHead->photo) }}" alt="Photo">
                                     @endif
@@ -206,8 +214,7 @@
                     <div class="col-lg-12 col-sm-12">
                         <div class="single-team-inner text-center">
                             <div class="thumb">
-                                <img src="{{ Storage::url($teacher_info_list->photo) }}" alt="Photo" width="100%"
-                                    height="300px;">
+                                <img src="{{ Storage::url($teacher_info_list->photo) }}" alt="Photo">
                             </div>
                             <div class="details">
                                 <h5><a href="individual-faculty-members.html">{{ $teacher_info_list->teacher_name }}</a>

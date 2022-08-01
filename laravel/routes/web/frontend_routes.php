@@ -9,11 +9,12 @@ Route::group(['middleware' => 'website'], function () {
     Route::name('frontend.')->namespace('Frontend')->group(function () {
         // administratives routes
         Route::get('administratives/{slug}', 'AdministrativeController@show')->name('administratives.show');
-
         Route::prefix('admission')->name('admission.')->namespace('Admission')->group(function () {
             Route::get('fees-and-funding', 'FeesAndFoundingController@show')->name('fees-and-funding.show');
         });
     });
+
+    //
 
     Route::get('/frontend/notice', 'WebsiteController@Notice');
     // news route for frontend
@@ -60,7 +61,6 @@ Route::group(['middleware' => 'website'], function () {
     Route::get('/frontend/syndicate', 'WebsiteController@syndicate');
     Route::get('/frontend/academic', 'WebsiteController@academic');
 
-
     Route::get('/frontend/test', 'WebsiteController@test');
     Route::get('/frontend/tution_fees', 'WebsiteController@tution_fees');
     Route::get('/frontend/faculty_member_list', 'WebsiteController@faculty_member_list');
@@ -97,6 +97,13 @@ Route::group(['middleware' => 'website'], function () {
     Route::get('/frontend/website_setup', 'WebsiteController@WebsiteSetup');
     Route::post('/frontend/website_setup', 'WebsiteController@WebsiteSetupUpdate');
 
+    //admission setup @akash 17/6/2022
+    Route::get('/frontend/admission_setup', 'WebsiteController@AdmissionSetup');
+    Route::post('/frontend/admission_setup_save', 'WebsiteController@AdmissionSetupSave');
+    Route::delete('/frontend/admission_setup_delete/{id}', 'WebsiteController@AdmissionSetupDelete');
+    Route::get('/frontend/admission_setup_edit/{id}/edit', 'WebsiteController@AdmissionSetupEdit');
+    Route::Post('/frontend/admission_setup_update/{id}', 'WebsiteController@AdmissionSetupUpdate');
+    //admission setup END @akash 17/6/2022
     //    Route::get('/frontend/former_head_add', 'WebsiteController@former_head_add');
     //    Route::post('/frontend/former_head_add', 'WebsiteController@WebsiteSetupUpdate');
 
@@ -114,7 +121,29 @@ Route::group(['middleware' => 'website'], function () {
     Route::get('/frontend/faculties/lab_info/{id}', 'WebsiteController@FacultiesLabInfo');
     Route::get('/frontend/faculties/fees_structure/{id}', 'WebsiteController@FeesStructure');
 
-    Route::get('/frontend/online-admission', 'WebsiteController@OnlineAdmission');
+    // Online Admission(Alal:14-06) work start
+    Route::get('/frontend/online-admission', 'WebsiteController@OnlineAdmissionFrontPage');
+    Route::get('/frontend/online-admission-new-applicant', 'WebsiteController@OnlineAdmissionNewApplicant'); //@Alal:05-07-22
+    Route::get('/frontend/online-admission-student-login', 'WebsiteController@OnlineAdmissionStudentLogin'); //@Alal:05-07-22
+    Route::post('/frontend/online-admission-student-admit-card', 'WebsiteController@OnlineAdmissionStudentAdmitCard'); //@Alal:07-07-22
+    Route::post('/frontend/online-admission-student-admit-card-front', 'WebsiteController@OnlineAdmissionStudentAdmitCardFront'); //@Alal:12-07-22
+    Route::get('/frontend/instruction', 'WebsiteController@OnlineInstruction');
+    Route::get('/frontend/admission-eligibility', 'WebsiteController@AdmissionEligibility');
+    Route::get('/frontend/important-dates', 'WebsiteController@ImportantDates');
+    Route::get('/frontend/important-dates', 'WebsiteController@ImportantDates');
+    Route::get('/frontend/application-form-front', 'WebsiteController@ApplicationFormFront');
+    Route::get('/frontend/online-admission-form/{id}', 'WebsiteController@OnlineAdmission'); //@akash
+    Route::get('/frontend/online-admission-payment', 'WebsiteController@OnlineAdmissionPayment');
+    Route::get('/frontend/admission-guidline', 'WebsiteController@AdmissionGuidline');
+    Route::get('/frontend/admission-contact', 'WebsiteController@AdmissionContact');
+    Route::post('/frontend/online-admission-form-submit/{id}', 'WebsiteController@OnlineAdmissionSubmit'); //@akash
+    // Route::get('/frontend/online-admission', 'WebsiteController@OnlineAdmission');
+    // Online Admission(Alal:17-06) work end
+
+
+
+
+
     Route::get('/frontend/district_filter/{id}', 'WebsiteController@district_filter');
     Route::get('/frontend/upozila_filter/{id}', 'WebsiteController@upozila_filter');
     Route::get('/frontend/unions_filter/{id}', 'WebsiteController@unions_filter');
@@ -127,7 +156,7 @@ Route::group(['middleware' => 'website'], function () {
     Route::get('/frontend/department_filter/{id}', 'WebsiteController@department_filter');
     Route::get('/frontend/program_filter/{id}', 'WebsiteController@program_filter');
 
-    Route::post('/frontend/online-admission', 'WebsiteController@AddOnlineAdmission');
+    Route::post('/frontend/online-admission', 'Aplicant_student@store');
 
     Route::get('/frontend/gallery', 'WebsiteController@Gallery');
     Route::get('/frontend/courses/{id}', 'WebsiteController@Course');
@@ -152,7 +181,6 @@ Route::resource('/zoom_create', 'ZoomAccountController');
 Route::post('/start_live_class', 'LiveClassController@StartClass');
 Route::get('/start_live_class/{id}', 'LiveClassController@StartSDKClass');
 Route::get('/delete_live_class/{id}', 'LiveClassController@delete');
-
 
 Route::post('/marksheet_report_publish', 'ResultReportController@marksheet_report_publish');
 Route::post('/class_w_section_filter', 'ischool_report@Class_w_section_filter');

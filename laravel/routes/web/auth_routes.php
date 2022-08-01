@@ -111,12 +111,14 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::group(['middleware' => ['permission:view student|create student|edit student|delete student']], function () {
         Route::resource('/online-admission', 'Aplicant_student');
+        Route::post('/aplicant_student', 'Aplicant_student@store');
         Route::resource('/aplicant_student', 'Aplicant_student');
         Route::post('/remove_ex_edu_data', 'Aplicant_student@remove_ex_edu_data');
         Route::get('/applicant_student_report', 'ischool_report@applicant_student_report');
         Route::post('/applicant_student_admit_card', 'ischool_report@applicant_student_admit_card');
         Route::resource('/addmission_test', 'addmission_test');
         Route::post('/check_reg_no_ex', 'addmission_test@check_reg_no_ex');
+         Route::get('/aplicant_student/view/{id}', 'aplicant_student@view_all');
     });
 
     Route::group(['middleware' => ['permission:view apprisal|create apprisal|edit apprisal|delete apprisal']], function () {

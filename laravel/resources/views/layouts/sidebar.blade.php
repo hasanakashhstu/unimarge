@@ -1036,7 +1036,14 @@
                             Website Setup
                         </a>
                     </li>
-
+                   <!--akash @13/6-->
+                    <li>
+                        <a href="/frontend/admission_setup">
+                            <i class="fa fa-circle" aria-hidden="true"></i>
+                           Admission Setup
+                        </a>
+                    </li>
+ <!--akash @13/6-->
                     <li>
                         <a href="/frontend/our_management">
                             <i class="fa fa-circle" aria-hidden="true"></i>

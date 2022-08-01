@@ -111,11 +111,6 @@
                             <h5>Add Notice</h5>
                         </div>
                         <div class="widget-content nopadding">
-
-
-
-
-
                             {{ Form::open(['url' => '/notice_board','class' => 'form-horizontal','files' => true,'method' => 'post','name' => 'basic_validate','id' => 'basic_validate','novalidate' => 'novalidate']) }}
 
                             <div hidden="hidden" class="control-group">

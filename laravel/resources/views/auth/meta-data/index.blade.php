@@ -44,10 +44,7 @@
                             <tr>
                                 <th>Sl</th>
                                 <th>Meta Key</th>
-                                {{-- <th>Title</th> --}}
                                 <th>Meta Value</th>
-                                {{-- <th>Sorting</th> --}}
-                                {{-- <th>Status</th> --}}
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -56,10 +53,7 @@
                                 <tr class="gradeX">
                                     <td>{{ ++$loop->index }}</td>
                                     <td>{{ $metaInfo->meta_key }}</td>
-                                    {{-- <td>{{ $metaInfo->title ?? 'N/A' }}</td> --}}
                                     <td>{!! $metaInfo->meta_value !!}</td>
-                                    {{-- <td>{{ $metaInfo->sort_order ?? 0 }}</td> --}}
-                                    {{-- <td>{{ $metaInfo->getStatus() }}</td> --}}
                                     <td id="my_align" class="display_status">
                                         @can('edit administrative')
                                             {{ Form::open(['url' => route('auth.metaData.edit', $metaInfo->id), 'method' => 'GET']) }}

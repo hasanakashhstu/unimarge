@@ -13,6 +13,8 @@
 
     <!-- Stylesheet -->
     <!-- vendor -->
+    <!-- <link rel="stylesheet" href="{{ asset('/assets/frontend/assets/css/bootstrap.min.css') }}"> -->
+
     <link rel="stylesheet" href="{{ asset('/assets/frontend/assets/css/vendor.css') }}">
 
     <link rel="stylesheet" href="{{ asset('/assets/frontend/assets/css/style.css') }}">
@@ -80,6 +82,9 @@
 
 
     {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> --}}
+    <!-- <script src="{{ asset('/assets/frontend/assets/js/jquery.slim.min.js') }}"></script> -->
+    <!-- <script src="{{ asset('/assets/frontend/assets/js/popper.min.js') }}"></script> -->
+    <!-- <script src="{{ asset('/assets/frontend/assets/js/bootstrap.bundle.min.js') }}"></script> -->
     <script src="{{ asset('/assets/frontend/assets/js/vendor.js') }}"></script>
     <!-- main js  -->
     <script src="{{ asset('/assets/frontend/assets/js/main.js') }}"></script>

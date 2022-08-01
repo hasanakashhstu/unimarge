@@ -186,7 +186,8 @@
                                 <td>{{$value->email}}</td>
                                 <td>{{$value->address}}</td>
                                 <td>
-                                    <img style="width: 50px;" src="{{ Storage::url($value->image) }}">
+                                    <!-- <img style="width: 50px;" src="{{ Storage::url($value->image) }}"> -->
+                                    <img src="{{ asset('img/backend/bot/'.$value->image) }}" width="50px" />
                                 </td>
                                 <td id="my_align" class="display_status">
 

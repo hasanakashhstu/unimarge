@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Mail\AplicantStudentMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use App\academic_syllebus_model;
 use App\aplicant_student_model;
 use App\applicant_faculty_choose_model;
@@ -55,18 +57,22 @@ use App\WebsiteNewsModel1;
 use App\WebsiteNewsModel;
 use App\WebsiteSetupModel;
 use App\WebsiteSliderModel;
+use App\program_type_model;
 use App\year_model;
+use App\AdmissionSetupModel;
 use File;
 use Illuminate\Http\Request;
-use Mail;
 use Redirect;
 use Session;
 use Validator;
+// Alal-21-06(Start)
+use App\manage_dormitory_model;
 
-class WebsiteController extends Controller
-{
-    public function Home()
-    {
+// Alal-21-06(End)
+
+class WebsiteController extends Controller {
+
+    public function Home() {
         $data['notice'] = notice_board_model::latest()->take(15)->get();
         $data['about_us'] = WebsiteSetupModel::first();
         $data['course'] = WebsiteCourseModel::limit(3)->get();
@@ -84,26 +90,92 @@ class WebsiteController extends Controller
         return view('website.home', $data);
     }
 
-    public function Notice()
-    {
+    public function Notice() {
         $data['notice'] = notice_board_model::latest('notice_id')->paginate(15);
         return view('website.notice', $data);
     }
 
-    public function SingleNotice($id)
-    {
+    public function SingleNotice($id) {
         $data['notice'] = notice_board_model::findOrFail($id);
         return view('website.single_notice', $data);
     }
 
-    public function WebsiteSetup()
-    {
+    public function WebsiteSetup() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.backend.website_setup', $data);
     }
 
-    public function WebsiteSetupUpdate(Request $request)
-    {
+    public function AdmissionSetup() {
+        $data['setups'] = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+
+        $data['manage_department'] = manage_department_model::get();
+        $data['session_choose_data'] = session_choose_model::get();
+        $data['program_type'] = program_type_model::get();
+        $data['status']['Active'] = "Active";
+        $data['status']['Inactive'] = "Inactive";
+        return view('website.backend.admission_setup', $data);
+    }
+
+    public function AdmissionSetupSave(Request $request) {
+
+        $requested_data = request()->except(['_token']);
+        $AdmissionSetupModel = new AdmissionSetupModel;
+        $validation = Validator::make($requested_data, $AdmissionSetupModel->validation()); //5th validation
+        if ($validation->fails()) {
+            return back()->withInput()->withErrors($validation);
+        }
+        AdmissionSetupModel::insert($requested_data);
+        Session::flash('success', "Admission Setup Successfully Added");
+        return Redirect::back();
+    }
+
+    public function AdmissionSetupEdit($id) {
+
+        $admission_setup = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->where('admission_setup.admission_setup_id', $id)
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+
+        $data['status']['Active'] = "Active";
+        $data['status']['Inactive'] = "Inactive";
+        $data['admission_setup'] = $admission_setup[0];
+        return view('website.backend.admission_setup_edit', $data);
+    }
+
+    public function AdmissionSetupUpdate(request $request, $id) {
+        $data = AdmissionSetupModel::findOrFail($id);
+
+        $requested_data = request()->except(['_token']);
+
+        $save_data['application_deadline'] = $requested_data['application_deadline'];
+        $save_data['date_of_admission_test'] = $requested_data['date_of_admission_test'];
+        $save_data['status'] = $requested_data['status'];
+        $AdmissionSetupModel = new AdmissionSetupModel;
+        $validation = Validator::make($requested_data, $AdmissionSetupModel->validation()); // validation
+        if ($validation->fails()) {
+            return back()->withInput()->withErrors($validation);
+        } else {
+            $data->fill($save_data)->save();
+            Session::flash('success', "Admission Setup Successfully Updated");
+            return Redirect::back();
+        }
+    }
+
+    public function AdmissionSetupDelete($id) {
+        AdmissionSetupModel::where('admission_setup_id', $id)->delete();
+        Session::flash('success', "Admission Setup Successfully Deleted");
+        return Redirect::back();
+    }
+
+    public function WebsiteSetupUpdate(Request $request) {
         $data = WebsiteSetupModel::findOrFail($request->website_setup_id);
         $requested_data = $request->all();
         //        dd($requested_data);
@@ -111,7 +183,6 @@ class WebsiteController extends Controller
         if ($validate->fails()) {
             return back()->withInput()->withErrors($validate);
         } else {
-
             if ($request->hasfile('citizen_charter')) {
                 if (File::exists($data->citizen_charter)) {
                     File::delete($data->citizen_charter);
@@ -140,14 +211,12 @@ class WebsiteController extends Controller
         }
     }
 
-    public function OurManagement()
-    {
+    public function OurManagement() {
         $data['our_management'] = WebsiteManagementModel::all();
         return view('website.backend.management', $data);
     }
 
-    public function OurManagementAdd(Request $request)
-    {
+    public function OurManagementAdd(Request $request) {
 
         $data = new WebsiteManagementModel;
         $validate = Validator::make($request->all(), $data->validation());
@@ -170,8 +239,7 @@ class WebsiteController extends Controller
         }
     }
 
-    public function OurManagementDelete($id)
-    {
+    public function OurManagementDelete($id) {
         $data = WebsiteManagementModel::findOrFail($id);
         if (File::exists($data->image)) {
             File::delete($data->image);
@@ -181,14 +249,12 @@ class WebsiteController extends Controller
         return Redirect::back();
     }
 
-    public function OurManagementEdit($id)
-    {
+    public function OurManagementEdit($id) {
         $data['our_management'] = WebsiteManagementModel::findOrFail($id);
         return view('website.backend.management_edit', $data);
     }
 
-    public function OurManagementUpdate(Request $request, $id)
-    {
+    public function OurManagementUpdate(Request $request, $id) {
         $data = WebsiteManagementModel::findOrFail($id);
         $validate = Validator::make($request->all(), $data->validation());
         if ($validate->fails()) {
@@ -213,61 +279,67 @@ class WebsiteController extends Controller
         }
     }
 
-    public function AboutUs()
-    {
+    public function AboutUs() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.about_us', $data);
     }
 
-    public function bot()
-    {
+    public function bot() {
 
         $data['bot_chairman'] = botModel::first();
-        $data['bot'] = botModel::where('bot_id', '!=', 1)->get();
+        // $data['bot'] = botModel::where('bot_id', '!=', 1)->get();
+        // $data['bot']  = DB::table('bot')->orderBy('bot_id', 'desc')->take(3)->get();
+        $data['bot'] = botModel::all();
         return view('website.bot', $data);
     }
-    public function message_bot_chairman()
-    {
+
+    public function message_bot_chairman() {
         $data['bot_chairman'] = botModel::first();
         $data['website_setup'] = WebsiteSetupModel::first();
         //        dd($data['website_setup']);
         return view('website.message_bot_chairman', $data);
     }
-    public function message_bot_vc()
-    {
+
+    public function message_bot_vc() {
+        //$data['teacher'] = teacher_model::join('teacher_address_child', 'teachers.teacher_id', '=', 'teacher_address_child.parent')->where('designation', 'principal')->first();
         $data['teacher'] = teacher_model::join('teacher_address_child', 'teachers.teacher_id', '=', 'teacher_address_child.parent')->where('designation', 'principal')->first();
+        // echo '<pre>';
+        // print_r($data);
+        // die;
         $data['website_setup'] = WebsiteSetupModel::first();
+
+        // echo '<pre>';
+        // print_r($data);
+        // die;
         return view('website.message_bot_vc', $data);
     }
-    public function overview()
-    {
+
+    public function overview() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.overview', $data);
     }
-    public function mission_vision()
-    {
+
+    public function mission_vision() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.mission_vision_final', $data);
     }
-    public function syndicate()
-    {
+
+    public function syndicate() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.syndicate', $data);
     }
 
-    public function academic()
-    {
+    public function academic() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.academic', $data);
     }
 
-    public function office_chairperson()
-    {
+    public function office_chairperson() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.department_view', $data);
     }
-    public function test()
-    {
+
+    public function test() {
         $data['website_setup'] = WebsiteSetupModel::first();
         $date = \Carbon\Carbon::today()->subDays(60);
         $data['notice'] = notice_board_model::where('created_at', '>=', $date)->latest()->get();
@@ -278,43 +350,38 @@ class WebsiteController extends Controller
         return view('website.department_view', $data);
     }
 
-    public function tution_fees()
-    {
+    public function tution_fees() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tution_fees', $data);
     }
-    public function faculty_member_list()
-    {
+
+    public function faculty_member_list() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.faculty_member_list', $data);
     }
 
-    public function student_advisor(manage_department_model $department)
-    {
+    public function student_advisor(manage_department_model $department) {
         $data['department'] = $department;
         $data['student_advisor'] = teacher_model::where('department_id', $department->id)->where('job_type', 'Student Advisor')->first();
 
         return view('website.faculty_student_advisor', $data);
     }
 
-    public function former_head(manage_department_model $department)
-    {
+    public function former_head(manage_department_model $department) {
         $data['department'] = $department;
         $data['departmentHead'] = $department->departmentHead;
 
         return view('website.former_head', $data);
     }
 
-    public function former_head_add()
-    {
+    public function former_head_add() {
 
         $data['former_head'] = former_head_model::join('manage_department', 'former_head.department_id', '=', 'manage_department.id')->where('former_head.department_id', $id)->first();
         $data['department'] = manage_subject_model::groupby('subject_name')->get();
         return view('website.faculty_student_advisor_add', $data);
     }
 
-    public function former_head_Update(Request $request)
-    {
+    public function former_head_Update(Request $request) {
         $data = WebsiteSetupModel::findOrFail($request->website_setup_id);
         $requested_data = $request->all();
         //        dd($requested_data);
@@ -351,164 +418,137 @@ class WebsiteController extends Controller
         }
     }
 
-    public function office_chief_advisor()
-    {
+    public function office_chief_advisor() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_chief_advisor', $data);
     }
 
-    public function office_vcice_chancellor()
-    {
+    public function office_vcice_chancellor() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_vcice_chancellor', $data);
     }
 
-    public function office_vcice_pro_chancellor()
-    {
+    public function office_vcice_pro_chancellor() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_vcice_pro_chancellor', $data);
     }
 
-    public function office_treasurer()
-    {
+    public function office_treasurer() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_treasurer', $data);
     }
 
-    public function office_dean()
-    {
+    public function office_dean() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_dean', $data);
     }
 
-    public function office_registrar()
-    {
+    public function office_registrar() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_registrar', $data);
     }
 
-    public function office_library()
-    {
+    public function office_library() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_library', $data);
     }
 
-    public function office_proctor()
-    {
+    public function office_proctor() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_proctor', $data);
     }
 
-    public function office_director_finance()
-    {
+    public function office_director_finance() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_director_finance', $data);
     }
 
-    public function office_controller_examination()
-    {
+    public function office_controller_examination() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.office_controller_examination', $data);
     }
 
-    public function Admission_test()
-    {
+    public function Admission_test() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_test', $data);
     }
 
-    public function Admission_test_result()
-    {
+    public function Admission_test_result() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_test_result', $data);
     }
 
-    public function Admission_contact()
-    {
+    public function Admission_contact() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_contact', $data);
     }
 
-    public function apply_online()
-    {
+    public function apply_online() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.apply_online', $data);
     }
 
-    public function Admission_eligibility()
-    {
+    public function Admission_eligibility() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_eligibility', $data);
     }
 
-    public function Admission_guidelines()
-    {
+    public function Admission_guidelines() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_guidelines', $data);
     }
 
-    public function Admission_process()
-    {
+    public function Admission_process() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_process', $data);
     }
 
-    public function Admission_transfer_guidelines()
-    {
+    public function Admission_transfer_guidelines() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.Admission_transfer_guidelines', $data);
     }
 
-    public function tuition_other_fees()
-    {
+    public function tuition_other_fees() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tuition_other_fees', $data);
     }
 
-    public function tuition_fee_calculator()
-    {
+    public function tuition_fee_calculator() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tuition_fee_calculator', $data);
     }
 
-    public function tuition_guidelines()
-    {
+    public function tuition_guidelines() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tuition_guidelines', $data);
     }
 
-    public function tuition_scholarship()
-    {
+    public function tuition_scholarship() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tuition_scholarship', $data);
     }
 
-    public function tuition_waiver_calculator()
-    {
+    public function tuition_waiver_calculator() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.tuition_waiver_calculator', $data);
     }
 
-    public function History()
-    {
+    public function History() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.history', $data);
     }
 
-    public function MissionVision()
-    {
+    public function MissionVision() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.mission_vision', $data);
     }
 
-    public function PrincipleMessage()
-    {
+    public function PrincipleMessage() {
         $data['website_setup'] = WebsiteSetupModel::first();
         return view('website.principle_message', $data);
     }
 
-    public function StudentInfo($id, $slug)
-    {
+    public function StudentInfo($id, $slug) {
         $slug_semester = explode("-", $slug);
         $semester = ucwords(implode(" ", $slug_semester));
         $dept_data = manage_department_model::where('department_code', $id)->first();
@@ -519,8 +559,7 @@ class WebsiteController extends Controller
         return view('website.student_info', $data);
     }
 
-    public function ClassRoutine($id, $slug)
-    {
+    public function ClassRoutine($id, $slug) {
         $slug_semester = explode("-", $slug);
         $semester = ucwords(implode(" ", $slug_semester));
         $dept_data = manage_department_model::where('department_code', $id)->first();
@@ -538,8 +577,7 @@ class WebsiteController extends Controller
         return view('website.class_routine', ['class_name' => $semester, 'section' => $section, 'subject_info_class_wise' => $subject_info_class_wise, 'section_info_class_wise' => $section_class_wise, 'teacher_detials' => $teacher_details, 'medium' => $medium, 'medium_grp' => $medium_grp, 'department' => $department, 'department_name' => $data['department'], 'semester' => $semester]);
     }
 
-    public function CourseMaterial($id, $slug)
-    {
+    public function CourseMaterial($id, $slug) {
         $slug_semester = explode("-", $slug);
         $data['semester'] = ucwords(implode(" ", $slug_semester));
         $dept_data = manage_department_model::where('department_code', $id)->first();
@@ -554,41 +592,35 @@ class WebsiteController extends Controller
         return view('website.course_material', $data);
     }
 
-    public function liveClass()
-    {
+    public function liveClass() {
         $data['live_classes'] = LiveClass::orderBy('start_time', 'desc')->get();
 
         return view('website.liveClass', $data);
     }
 
-    public function CitizenCharter()
-    {
+    public function CitizenCharter() {
         $data['citizen_charter'] = WebsiteSetupModel::first();
         return view('website.citizen_charter', $data);
     }
 
-    public function Contact()
-    {
+    public function Contact() {
         $data['contact'] = WebsiteContactModel::all();
         return view('website.contact', $data);
     }
 
-    public function FacultiesMsgFromHead($id)
-    {
+    public function FacultiesMsgFromHead($id) {
         $data['faculties'] = WebsiteFacultiesModel::where('website_faculties_name', $id)
-            ->join('teacher', 'teacher.teacher_id', '=', 'website_faculties.department_head')
-            ->first();
+                ->join('teacher', 'teacher.teacher_id', '=', 'website_faculties.department_head')
+                ->first();
         return view('website.faculties_msg_from_head', $data);
     }
 
-    public function FacultiesAboutDept($id)
-    {
+    public function FacultiesAboutDept($id) {
         $data['department'] = manage_department_model::where('department_name', $id)->first();
         return view('website.faculties_about_department', $data);
     }
 
-    public function FacultiesTeacherInfo($id)
-    {
+    public function FacultiesTeacherInfo($id) {
         // $sub_wise_teacher = manage_subject_model::where('department',$id)->get()->toArray();
         // $teacher_name = collect($sub_wise_teacher)->unique('teacher')->pluck('teacher');
         // $data['teacher_info'] = teacher_model::whereIn('teacher_name',$teacher_name)->get();
@@ -599,8 +631,7 @@ class WebsiteController extends Controller
         return view('website.faculties_teacher_info', $data);
     }
 
-    public function FacultiesDepartmentInfo($id)
-    {
+    public function FacultiesDepartmentInfo($id) {
         $data['department'] = manage_department_model::where('department_code', $id)->firstOrFail();
         $data['manage_department'] = manage_department_model::get();
         $data['general_settings'] = general_settings_model::first();
@@ -616,8 +647,7 @@ class WebsiteController extends Controller
         return view('website.department_view', $data);
     }
 
-    public function department_wise_faculty(manage_department_model $department)
-    {
+    public function department_wise_faculty(manage_department_model $department) {
 
         $data['department'] = $department;
         $data['teachers'] = teacher_model::where('department_id', $department->id)->latest()->get();
@@ -625,12 +655,11 @@ class WebsiteController extends Controller
         return view('website.department_wise_faculty', $data);
     }
 
-    public function faculty_profile($id)
-    {
+    public function faculty_profile($id) {
         $data['teacher_info'] = teacher_model::join('manage_department', 'teacher.department_id', '=', 'manage_department.id')
-            ->join('teacher_address_child', 'teacher.teacher_id', '=', 'teacher_address_child.parent')
-            ->join('teacher_qualification_child', 'teacher.teacher_id', '=', 'teacher_qualification_child.parent')
-            ->where('teacher.teacher_id', $id)->where('teacher.status', 'teacher')->select('teacher.*', 'manage_department.department_name', 'teacher_address_child.*', 'teacher_qualification_child.*')->orderBy('sort_index', 'ASC')->first();
+                        ->join('teacher_address_child', 'teacher.teacher_id', '=', 'teacher_address_child.parent')
+                        ->join('teacher_qualification_child', 'teacher.teacher_id', '=', 'teacher_qualification_child.parent')
+                        ->where('teacher.teacher_id', $id)->where('teacher.status', 'teacher')->select('teacher.*', 'manage_department.department_name', 'teacher_address_child.*', 'teacher_qualification_child.*')->orderBy('sort_index', 'ASC')->first();
 
         $data['bot_chairman'] = botModel::first();
         $data['bot'] = botModel::where('bot_id', '!=', 1)->get();
@@ -638,32 +667,28 @@ class WebsiteController extends Controller
         return view('website.individual_faculty_data', $data);
     }
 
-    public function department_wise_tution(manage_department_model $department)
-    {
+    public function department_wise_tution(manage_department_model $department) {
         $data['department'] = $department;
         $data['feesStructure'] = WebsiteFeesStuctureModel::where('department', $department->id)->first();
 
         return view('website.department_wise_tution', $data);
     }
 
-    public function newsByDepartment($id)
-    {
+    public function newsByDepartment($id) {
         $data['department'] = manage_department_model::findOrFail($id);
         $data['newsList'] = WebsiteNewsModel::where('department', $id)->latest()->paginate(15);
 
         return view('website.news_by_department', $data);
     }
 
-    public function galleriesByDepartment($id)
-    {
+    public function galleriesByDepartment($id) {
         $data['department'] = manage_department_model::findOrFail($id);
         $data['galleries'] = WebsiteEventModel::where('department', $id)->latest()->get();
 
         return view('website.galleries_by_department', $data);
     }
 
-    public function searchcourse(Request $request)
-    {
+    public function searchcourse(Request $request) {
         $subject = manage_subject_model::where('department', $request->department_code)->get();
 
         foreach ($subject as $subject_list) {
@@ -671,8 +696,7 @@ class WebsiteController extends Controller
         }
     }
 
-    public function contact_us(Request $request)
-    {
+    public function contact_us(Request $request) {
 
         $data['contact'] = general_settings_model::first();
         //        dd($data['contact']);
@@ -680,34 +704,227 @@ class WebsiteController extends Controller
         return view('website.contact_us', $data);
     }
 
-    public function FacultiesNonTechInstructor()
-    {
+    public function FacultiesNonTechInstructor() {
         $data['teacher_info'] = teacher_model::where('type', 'Non-Tech')->orderBy('sort_index', 'ASC')->paginate(15);
 
         return view('website.faculties_non_tech_instructor', $data);
     }
 
-    public function FacultiesStaffInfo($id)
-    {
+    public function FacultiesStaffInfo($id) {
         $data['staff_info'] = teacher_model::where('status', 'staff')->paginate(15);
         $data['department'] = $id;
 
         return view('website.faculties_staff_info', $data);
     }
 
-    public function FacultiesLabInfo($id)
-    {
+    public function FacultiesLabInfo($id) {
         $data['faculties'] = WebsiteFacultiesModel::where('website_faculties_name', $id)
-            ->join('teacher', 'teacher.teacher_id', '=', 'website_faculties.department_head')
-            ->first();
+                ->join('teacher', 'teacher.teacher_id', '=', 'website_faculties.department_head')
+                ->first();
         return view('website.faculties_lab_info', $data);
     }
 
-    public function OnlineAdmission()
-    {
+    public function OnlineAdmissionSubmit(Request $request, $id) {
+        $requested_data = $request->all();
+        $requested_data['applicant_id'] = time();
+
+        $admission_setup = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->where('admission_setup.admission_setup_id', $id)
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+
+        foreach ($requested_data as $key => $data) {
+            if ($data == '----No Data Found----' || $data == '--Select--' || $data == '----select----') {
+                $requested_data[$key] = null;
+            }
+        }
+        if ($request->exam_name) {
+            if ($requested_data['exam_name'][0] == '--Select--' || $requested_data['exam_name'][0] == null) {
+                Session::flash('error', "Minimum one Educational History Required");
+                return back()->withInput();
+            }
+        } else {
+            Session::flash('error', "Minimum one Educational History Required");
+            return back()->withInput();
+        }
+
+
+        if ($requested_data['attached_photo_name']) {
+            $file_path_photo = "img/backend/aplicant_student/";
+            $file_name_photo = $requested_data['applicant_id'] . "_photo.jpg";
+            $requested_data['attached_photo_name']->move($file_path_photo, $file_name_photo);
+        }
+        if ($requested_data['attached_signature_name']) {
+            $file_path_signature = "img/backend/aplicant_student/";
+            $file_name_signature = $requested_data['applicant_id'] . "_signature.jpg";
+            $requested_data['attached_signature_name']->move($file_path_signature, $file_name_signature);
+        }
+
+
+        //data process for aplicant_student table
+        $student_info['applicant_id'] = $requested_data['applicant_id'];
+        $student_info['student_name'] = $requested_data['student_name'];
+        $student_info['student_name_bangla'] = $requested_data['student_name_bangla'];
+        $student_info['birth_date'] = $requested_data['birth_date'];
+        $student_info['nid_birth'] = $requested_data['nid_birth'];
+        $student_info['birth_registration'] = $requested_data['birth_registration'];
+        $student_info['religion'] = $requested_data['religion'];
+        $student_info['nationality'] = $requested_data['nationality'];
+        $student_info['maritial'] = $requested_data['maritial'];
+        $student_info['blood_group'] = $requested_data['blood_group'];
+        $student_info['income_guardian'] = $requested_data['income_guardian'];
+        $student_info['phone'] = $requested_data['phone'];
+        $student_info['email'] = $requested_data['email'];
+        $student_info['father_mobile_no'] = $requested_data['father_mobile_no'];
+        $student_info['mother_mobile_no'] = $requested_data['mother_mobile_no']; //
+
+        $student_info['father_name_bangla'] = $requested_data['father_name_bangla'];
+        $student_info['father_name'] = $requested_data['father_name'];
+        $student_info['father_national_id_no'] = $requested_data['father_national_id_no']; //
+        $student_info['father_occupation'] = $requested_data['father_occupation']; //
+
+        $student_info['mother_name_bangla'] = $requested_data['mother_name_bangla'];
+        $student_info['mother_name'] = $requested_data['mother_name'];
+        $student_info['mother_national_id_no'] = $requested_data['mother_national_id_no']; //
+        $student_info['mother_occupation'] = $requested_data['mother_occupation']; //
+
+        $student_info['physically_challenged'] = $requested_data['physically_challenged'];
+
+        $student_info['credit_transfer'] = $requested_data['credit_transfer'];
+        $student_info['credit_name_of_university'] = $requested_data['credit_name_of_university'];
+        $student_info['credit'] = $requested_data['credit'];
+        $student_info['cgpa'] = $requested_data['cgpa'];
+        $student_info['transfer_year'] = $requested_data['year']; //
+        $student_info['semester'] = $requested_data['semester'];
+
+        $student_info['degree_name'] = $admission_setup[0]->program_type;
+        $student_info['session_choose'] = $admission_setup[0]->session_name;
+        $student_info['session'] = $admission_setup[0]->year;
+        $student_info['department'] = $admission_setup[0]->department_id;
+
+        $student_info['attached_photo_name'] = $file_name_photo;
+        $student_info['attached_signature_name'] = $file_name_signature;
+        $student_info['payment_transaction_id'] = $requested_data['payment_transaction_id'];
+        $student_info['payment_mobile_no'] = $requested_data['payment_mobile_no'];
+        $student_info['hall_of_residence'] = $requested_data['hall_of_residence'];
+        // aplicant_student_model::insert($student_info); //insert aplicant_student table
+
+        $applicant_student_child['parent'] = $requested_data['applicant_id'];
+        $applicant_student_child['division'] = $requested_data['division'];
+        $applicant_student_child['home_district'] = $requested_data['home_district'];
+        $applicant_student_child['upazilas'] = $requested_data['upazilas'];
+        $applicant_student_child['unions'] = $requested_data['unions'];
+        $applicant_student_child['village_name'] = $requested_data['village_name'];
+
+        $applicant_student_child['post_office'] = $requested_data['post_office'];
+        $applicant_student_child['present_division'] = $requested_data['present_division'];
+        $applicant_student_child['present_home_district'] = $requested_data['present_home_district'];
+        $applicant_student_child['present_upazilas'] = $requested_data['present_upazilas'];
+        $applicant_student_child['present_unions'] = $requested_data['present_unions'];
+        $applicant_student_child['present_village_name'] = $requested_data['present_village_name'];
+        $applicant_student_child['present_post_office'] = $requested_data['present_post_office'];
+
+        $applicant_student_child['legal_gurdian_name'] = $requested_data['legal_gurdian_name'];
+        $applicant_student_child['legal_gurdian_name_bangla'] = $requested_data['legal_gurdian_name_bangla'];
+        $applicant_student_child['legal_gurdian_relation'] = $requested_data['legal_gurdian_relation'];
+        $applicant_student_child['legal_gurdian_occupation'] = $requested_data['legal_gurdian_occupation'];
+        $applicant_student_child['legal_gurdian_nid_no'] = $requested_data['legal_gurdian_nid_no'];
+        $applicant_student_child['legal_gurdian_contact_no'] = $requested_data['legal_gurdian_contact_no'];
+        $applicant_student_child['legal_gurdian_address'] = $requested_data['legal_gurdian_address'];
+
+        $applicant_student_child['local_gurdian_name'] = $requested_data['local_gurdian_name'];
+        $applicant_student_child['local_gurdian_name_bangla'] = $requested_data['local_gurdian_name_bangla'];
+        $applicant_student_child['local_gurdian_relation'] = $requested_data['local_gurdian_relation'];
+        $applicant_student_child['local_gurdian_occupation'] = $requested_data['local_gurdian_occupation'];
+        $applicant_student_child['local_gurdian_nid_no'] = $requested_data['local_gurdian_nid_no'];
+        $applicant_student_child['local_gurdian_contact_no'] = $requested_data['local_gurdian_contact_no'];
+        $applicant_student_child['local_gurdian_address'] = $requested_data['local_gurdian_address'];
+
+        //applicant_student_child_model::insert($applicant_student_child); //insert in applicant_student_child_model //2nd insert
+
+        if ($requested_data['exam_name'][0]) {
+            foreach ($requested_data['exam_name'] as $key => $exam_value) {
+                $file_path = null;
+                $file_name = null;
+                if ($requested_data['image_name'][$key]) {
+                    $file_path = "img/backend/aplicant_student/marksheet/";
+                    $file_name = $requested_data['applicant_id'] . '_' . $requested_data['passing_year'][$key] . ".jpg";
+                    $requested_data['image_name'][$key]->move($file_path, $file_name);
+                }
+                $qualification_data = [
+                    'applicant_id' => $requested_data['applicant_id'],
+                    'exam_name' => $requested_data['exam_name'][$key],
+                    'borad' => $requested_data['borad'][$key],
+                    'reg_no' => $requested_data['reg_no'][$key],
+                    'roll_no' => $requested_data['roll_no'][$key],
+                    'group' => $requested_data['group'][$key],
+                    'passing_year' => $requested_data['passing_year'][$key],
+                    'gpa' => $requested_data['gpa'][$key],
+                    'image_name' => $file_name,
+                    'image_path' => $file_path,
+                ];
+                // applicant_student_educational_q::insert($qualification_data); //insert into applicant_student_educational_q 5th insert
+            }
+        }
+
+        $applicant_reference['applicant_id'] = $requested_data['applicant_id'];
+        $applicant_reference['reference_name'] = $requested_data['reference_name'];
+        $applicant_reference['reference_designation'] = $requested_data['reference_designation'];
+        $applicant_reference['reference_institute_name'] = $requested_data['reference_institute_name'];
+        $applicant_reference['reference_id_no'] = $requested_data['reference_id_no'];
+        $applicant_reference['reference_mobile_no'] = $requested_data['reference_mobile_no'];
+        $applicant_reference['reference_name1'] = $requested_data['reference_name1'];
+        $applicant_reference['reference_designation1'] = $requested_data['reference_designation1'];
+        $applicant_reference['reference_institute_name1'] = $requested_data['reference_institute_name1'];
+        $applicant_reference['reference_id_no1'] = $requested_data['reference_id_no1'];
+        $applicant_reference['reference_mobile_no1'] = $requested_data['reference_mobile_no1'];
+        //reference_model::insert($applicant_reference); //insert in reference_model  4th insert
+
+        $faculty_choose['applicant_id'] = $requested_data['applicant_id'];
+        $faculty_choose['department'] = $admission_setup[0]->department_id;
+        $faculty_choose['shift'] = $admission_setup[0]->session_name;
+        //applicant_faculty_choose_model::insert($faculty_choose); //inseret in faculty_choose  5th table
+        // echo '<pre>';
+        // print_r($applicant_reference);
+        // die;
+
+
+       // $applicant_admit['admit_card'] = DB::table('applicant_student')->orderBy('applicant_id', 'desc')->take(1)->get();
+        
+        $email = $requested_data['email'];
+        $mail['email'] = $email;
+        $mail['id'] = $faculty_choose['applicant_id'];
+        Mail::to($email)->send(new AplicantStudentMail($mail));
+
+        session()->flash('success', "$request->student_name Information Succesfully inserted and login information sent");
+        return Redirect::back();
+       // return view('website.admission-form-submission', $applicant_admit);
+    }
+
+    public function OnlineAdmission($id) {
+        $admission_setup = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->where('admission_setup.admission_setup_id', $id)
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+
+        $data['admission_setup'] = $admission_setup[0];
+
+        $data['degree_name_data'] = degree_name_model::get();
+        $data['session_choose_data'] = session_choose_model::get();
+        $data['session'] = ov_setup_model::where('type', 'Session')->get();
+        $data['department_name'] = manage_department_model::all();
+
+        $data['dormitory_name'] = manage_dormitory_model::all();
+
         $dept = manage_department_model::all();
         $data['department'] = collect($dept)->unique('department_code');
-        $data['session'] = ov_setup_model::where('type', 'Session')->get();
+
         $data['shift'] = ov_setup_model::where('type', 'Shift')->get();
 
         $data['exam_lsit'] = exam_list_model::all();
@@ -732,9 +949,14 @@ class WebsiteController extends Controller
         $data['exam_name_data'] = exam_name_model::get();
         $data['board_name_data'] = board_name_model::get();
         $data['group_name_data'] = group_name_model::get();
-        $data['degree_name_data'] = degree_name_model::get();
-        $data['session_choose_data'] = session_choose_model::get();
+
         $data['religion_data'] = religion_model::get();
+        /*
+          echo '<pre>';
+          print_r( $data['religion_data']);
+          die;
+         * 
+         */
         $data['quota_data'] = quota_model::get();
         $data['semester_data'] = semester_model::get();
         $data['profession_data'] = profession_model::get();
@@ -743,132 +965,277 @@ class WebsiteController extends Controller
         return view('website.online_admission', $data);
     }
 
+// Online Admission(Alal:14-06) work start
+    public function OnlineAdmissionFrontPage() {
+        return view('website.online_admission_front');
+    }
+
+    // Alal(05-07-22) Start
+    public function OnlineAdmissionNewApplicant() {
+        $date = date("Y-m-d");
+        $data = array();
+        $data['undergraduates'] = array();
+        $data['graduates'] = array();
+        $admission_setup = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->where('admission_setup.status', 'Active')
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+        foreach ($admission_setup as $key => $admission) {
+            if (strtotime($admission->application_deadline) + 86400 > strtotime($date)) {
+                if ($admission->program_type == 'Graduate') {
+                    $data['graduates'][$key]['id'] = $admission->admission_setup_id;
+                    $data['graduates'][$key]['department_name'] = $admission->department_name;
+                    $data['graduates'][$key]['session_name'] = $admission->session_name;
+                    $data['graduates'][$key]['application_deadline'] = date("F j, Y", strtotime($admission->application_deadline));
+                    $data['graduates'][$key]['date_of_admission_test'] = date("F j, Y", strtotime($admission->date_of_admission_test));
+                } else {
+                    $data['undergraduates'][$key]['id'] = $admission->admission_setup_id;
+                    $data['undergraduates'][$key]['department_name'] = $admission->department_name;
+                    $data['undergraduates'][$key]['session_name'] = $admission->session_name;
+                    $data['undergraduates'][$key]['application_deadline'] = date("F j, Y", strtotime($admission->application_deadline));
+                    $data['undergraduates'][$key]['date_of_admission_test'] = date("F j, Y", strtotime($admission->date_of_admission_test));
+                }
+            }
+        }
+        return view('website.application_form_front', $data);
+    }
+
+    public function OnlineAdmissionStudentLogin() {
+        return view('login.student_login_applicant');
+        // return view('login.student_login');
+    }
+    // Alal(05-07-22) End
+
+    public function OnlineAdmissionStudentAdmitCard() { // @Alal: 07-07-22
+        return view('website.online-admission-student-admit-card');
+    }
+
+    public function OnlineAdmissionStudentAdmitCardFront(Request $request) { // @Alal: 12-07-22
+
+        // echo '<pre>';
+        // print_r($request->applicant_id);
+        // die;
+        // $request->validate([
+        //     'applicant_id'=> 'required',
+        //     'email'=> 'required|email|unique:applicant_student'
+        // ]);
+
+
+        $applicant_id    = aplicant_student_model::where('applicant_id','=',$request->applicant_id)->first();
+        $applicant_email = aplicant_student_model::where('email','=',$request->email)->first();
+
+        if($applicant_email){
+            if($applicant_id){
+                $admit_data['admit_card'] = DB::table('applicant_student')
+                ->where('applicant_student.applicant_id', '=', $request->applicant_id)
+                ->get();
+                // echo '<pre>';
+                // print_r($admit_data);
+                // die;
+                return view('website.online-admission-student-admit-card', $admit_data);
+            }else{
+                return back()->with('applicant_id','Applicant ID not correct!'); 
+            }
+        }else{
+            return back()->with('email','Applicant Email not correct!');
+        }
+
+        
+    }
+
+    public function OnlineInstruction() {
+        return view('website.online_admission_instruction');
+    }
+
+    public function AdmissionEligibility() {
+        return view('website.admission_eligibility');
+    }
+
+    public function ImportantDates() {
+        return view('website.important_dates');
+    }
+
+    public function ApplicationFormFront() {
+        $date = date("Y-m-d");
+        $data = array();
+        $data['undergraduates'] = array();
+        $data['graduates'] = array();
+        $admission_setup = DB::table('admission_setup')
+                ->join('session_choose', 'admission_setup.session', '=', 'session_choose.id')
+                ->join('manage_department', 'admission_setup.department_id', '=', 'manage_department.id')
+                ->join('program_type', 'program_type.id', '=', 'admission_setup.program_type')
+                ->where('admission_setup.status', 'Active')
+                ->select('admission_setup.*', 'session_choose.name as session_name', 'manage_department.department_name', 'program_type.program_type')
+                ->get();
+        foreach ($admission_setup as $key => $admission) {
+            if (strtotime($admission->application_deadline) + 86400 > strtotime($date)) {
+                if ($admission->program_type == 'Graduate') {
+                    $data['graduates'][$key]['id'] = $admission->admission_setup_id;
+                    $data['graduates'][$key]['department_name'] = $admission->department_name;
+                    $data['graduates'][$key]['session_name'] = $admission->session_name;
+                    $data['graduates'][$key]['application_deadline'] = date("F j, Y", strtotime($admission->application_deadline));
+                    $data['graduates'][$key]['date_of_admission_test'] = date("F j, Y", strtotime($admission->date_of_admission_test));
+                } else {
+                    $data['undergraduates'][$key]['id'] = $admission->admission_setup_id;
+                    $data['undergraduates'][$key]['department_name'] = $admission->department_name;
+                    $data['undergraduates'][$key]['session_name'] = $admission->session_name;
+                    $data['undergraduates'][$key]['application_deadline'] = date("F j, Y", strtotime($admission->application_deadline));
+                    $data['undergraduates'][$key]['date_of_admission_test'] = date("F j, Y", strtotime($admission->date_of_admission_test));
+                }
+            }
+        }
+
+        return view('website.application_form_front', $data);
+    }
+
+    public function OnlineAdmissionPayment() {
+        return view('website.online_admission_payment');
+    }
+
+    public function AdmissionGuidline() {
+        return view('website.admission_guidline');
+    }
+
+    public function AdmissionContact() {
+        return view('website.admission_contact_info');
+    }
+
+    // Online Admission(Alal:17-06) work end
+
     /*
-    public function AddOnlineAdmission(Request $request)
-    {
-    $requested_data = $request->all();
-    $requested_data['relation'] = 'Guardian';
-    //$requested_data['class'] = 'First Semester';
-    $requested_data['admission_test'] = 'Admission Test';
-    //$requested_data['section'] = 'Please Frist Fill Class';
-    $requested_data['Applicant'] = 'Please Frist Fill Class';
-    $requested_data['batch'] = '0';
-    //$requested_data['medium'] = 'TISI';
-    $requested_data['applicant_id'] = time();
+      public function AddOnlineAdmission(Request $request)
+      {
+      $requested_data = $request->all();
+      $requested_data['relation'] = 'Guardian';
+      //$requested_data['class'] = 'First Semester';
+      $requested_data['admission_test'] = 'Admission Test';
+      //$requested_data['section'] = 'Please Frist Fill Class';
+      $requested_data['Applicant'] = 'Please Frist Fill Class';
+      $requested_data['batch'] = '0';
+      //$requested_data['medium'] = 'TISI';
+      $requested_data['applicant_id'] = time();
 
-    //1st table
-    $data = new aplicant_student_model;
-    $requested_data['medium'] = '';
-    $requested_data['department'] = '';
-    $requested_data['class'] = '';
-    $requested_data['section'] = '';
-    $requested_data['shift'] = '';
-    $data->fill($requested_data)->save();
-    //1st table
+      //1st table
+      $data = new aplicant_student_model;
+      $requested_data['medium'] = '';
+      $requested_data['department'] = '';
+      $requested_data['class'] = '';
+      $requested_data['section'] = '';
+      $requested_data['shift'] = '';
+      $data->fill($requested_data)->save();
+      //1st table
 
-    //2nd table
-    if (!empty($requested_data['post_office']) or !empty($requested_data['home_district']) or !empty($requested_data['division']) or !empty($requested_data['village_name'])) {
-    $applicant_student_child_model = new applicant_student_child_model;
-    $applicant_student_child_model['parent'] = $requested_data['applicant_id'];
-    $applicant_student_child_model->fill($request->all())->save();
-    }
-    //2nd table
+      //2nd table
+      if (!empty($requested_data['post_office']) or !empty($requested_data['home_district']) or !empty($requested_data['division']) or !empty($requested_data['village_name'])) {
+      $applicant_student_child_model = new applicant_student_child_model;
+      $applicant_student_child_model['parent'] = $requested_data['applicant_id'];
+      $applicant_student_child_model->fill($request->all())->save();
+      }
+      //2nd table
 
-    //3rd table
-    if (!empty($requested_data['reference_name']) or !empty($requested_data['reference_designation'])) {
-    $applicant_student_reference_model = new reference_model();
-    $applicant_student_reference_model['applicant_id'] = $requested_data['applicant_id'];
-    $applicant_student_reference_model->fill($request->all())->save();
-    }
-    //3rd table
+      //3rd table
+      if (!empty($requested_data['reference_name']) or !empty($requested_data['reference_designation'])) {
+      $applicant_student_reference_model = new reference_model();
+      $applicant_student_reference_model['applicant_id'] = $requested_data['applicant_id'];
+      $applicant_student_reference_model->fill($request->all())->save();
+      }
+      //3rd table
 
-    //betch apply program insert
-    if(!empty($request->medium)){
-    $choose_program = [];
-    foreach ($request->medium as $key => $value) {
-    $choose_program[$key]['applicant_id'] = $requested_data['applicant_id'];
-    $choose_program[$key]['medium'] = $value;
-    $choose_program[$key]['department'] = $request->department[$key];
-    $choose_program[$key]['class'] = $request->class[$key];
-    $choose_program[$key]['section'] = $request->section[$key];
-    $choose_program[$key]['shift'] = $request->shift[$key];
-    }
-    applicant_faculty_choose_model::insert($choose_program);
+      //betch apply program insert
+      if(!empty($request->medium)){
+      $choose_program = [];
+      foreach ($request->medium as $key => $value) {
+      $choose_program[$key]['applicant_id'] = $requested_data['applicant_id'];
+      $choose_program[$key]['medium'] = $value;
+      $choose_program[$key]['department'] = $request->department[$key];
+      $choose_program[$key]['class'] = $request->class[$key];
+      $choose_program[$key]['section'] = $request->section[$key];
+      $choose_program[$key]['shift'] = $request->shift[$key];
+      }
+      applicant_faculty_choose_model::insert($choose_program);
 
-    }
-    //betch apply program insert
+      }
+      //betch apply program insert
 
-    //educationa qualification
-    if (count($request->exam_name) > 0) {
-    foreach ($request->exam_name as $key => $exam_value) {
-    $qualification_data[] = [
-    'applicant_id' => $requested_data['applicant_id'],
-    'exam_name' => $request->exam_name[$key],
-    'borad' => $request->borad[$key],
-    'reg_no' => $request->reg_no[$key],
-    'roll_no' => $request->roll_no[$key],
-    'group' => $request->group[$key],
-    'passing_year' => $request->passing_year[$key],
-    'gpa' => $request->gpa[$key],
-    ];
+      //educationa qualification
+      if (count($request->exam_name) > 0) {
+      foreach ($request->exam_name as $key => $exam_value) {
+      $qualification_data[] = [
+      'applicant_id' => $requested_data['applicant_id'],
+      'exam_name' => $request->exam_name[$key],
+      'borad' => $request->borad[$key],
+      'reg_no' => $request->reg_no[$key],
+      'roll_no' => $request->roll_no[$key],
+      'group' => $request->group[$key],
+      'passing_year' => $request->passing_year[$key],
+      'gpa' => $request->gpa[$key],
+      ];
 
-    if (@$request->marksheet[$key]) {
-    $file_path = "img/backend/aplicant_student/marksheet/";
-    $fil_name = $requested_data['applicant_id'].'_'.$request->exam_name[$key].".jpg";
+      if (@$request->marksheet[$key]) {
+      $file_path = "img/backend/aplicant_student/marksheet/";
+      $fil_name = $requested_data['applicant_id'].'_'.$request->exam_name[$key].".jpg";
 
-    $request->marksheet[$key]->move($file_path, $fil_name);
-    }
+      $request->marksheet[$key]->move($file_path, $fil_name);
+      }
 
-    }
-    applicant_student_educational_q::insert($qualification_data);
-    }
-    //educationa qualification
+      }
+      applicant_student_educational_q::insert($qualification_data);
+      }
+      //educationa qualification
 
-    //photo
-    if($request->attached_photo){
-    $file_path = "img/backend/aplicant_student/";
-    $fil_name = $requested_data['applicant_id'].".jpg";
-    $request->file('attached_photo')->move($file_path, $fil_name);
+      //photo
+      if($request->attached_photo){
+      $file_path = "img/backend/aplicant_student/";
+      $fil_name = $requested_data['applicant_id'].".jpg";
+      $request->file('attached_photo')->move($file_path, $fil_name);
 
-    }
-    //photo
+      }
+      //photo
 
-    //Attachments
-    if($request->attached_signature){
-    $file_path = "img/backend/aplicant_student/signature/";
-    $fil_name = $requested_data['applicant_id'].".jpg";
-    $request->file('attached_signature')->move($file_path, $fil_name);
-    }
-    //Attachments
+      //Attachments
+      if($request->attached_signature){
+      $file_path = "img/backend/aplicant_student/signature/";
+      $fil_name = $requested_data['applicant_id'].".jpg";
+      $request->file('attached_signature')->move($file_path, $fil_name);
+      }
+      //Attachments
 
-    //4th table
-    if (!empty($request->inspection_no) or !empty($request->reference)) {
-    $office_copy_data = [
-    'applicant_id' => $requested_data['applicant_id'],
-    'inspection_no' => $requested_data['inspection_no'],
-    'reference' => $requested_data['reference']
-    ];
-    applicant_student_office_copy_model::insert($office_copy_data);
-    }
-    //4th table
-    Session::flash('success', "Admission successfully");
-    return Redirect::back();
-    exit();
-    $validate = Validator::make($requested_data, $data->website_validation());
-    if ($validate->fails()) {
-    return back()->withInput()->withErrors($validate);
-    } else {
+      //4th table
+      if (!empty($request->inspection_no) or !empty($request->reference)) {
+      $office_copy_data = [
+      'applicant_id' => $requested_data['applicant_id'],
+      'inspection_no' => $requested_data['inspection_no'],
+      'reference' => $requested_data['reference']
+      ];
+      applicant_student_office_copy_model::insert($office_copy_data);
+      }
+      //4th table
+      Session::flash('success', "Admission successfully");
+      return Redirect::back();
+      exit();
+      $validate = Validator::make($requested_data, $data->website_validation());
+      if ($validate->fails()) {
+      return back()->withInput()->withErrors($validate);
+      } else {
 
-    // validation rules goes here
-    Session::flash('success', "Admission successfully");
-    return Redirect::back();
-    }
-    }
+      // validation rules goes here
+      Session::flash('success', "Admission successfully");
+      return Redirect::back();
+      }
+      }
      */
-    public function AddOnlineAdmission(Request $request)
-    {
 
+    public function AddOnlineAdmission(Request $request) {
+        $t = time();
+        echo 'aaa';
+        die;
         $requested_data = $request->all();
+        echo '<pre>';
+        print_r($requested_data);
+        die;
 
         $requested_data['relation'] = 'Guardian';
         //$requested_data['class'] = 'First Semester';
@@ -884,15 +1251,14 @@ class WebsiteController extends Controller
 
         //1st table
         //        $data = new aplicant_student_model;
-        /*$requested_data['medium'] = '';
-        $requested_data['department'] = '';
-        $requested_data['class'] = '';
-        $requested_data['section'] = '';
-        $requested_data['shift'] = '';*/
+        /* $requested_data['medium'] = '';
+          $requested_data['department'] = '';
+          $requested_data['class'] = '';
+          $requested_data['section'] = '';
+          $requested_data['shift'] = ''; */
         //        $data->fill($requested_data)->save();
         //        $data->fill($request->all())->save();
         //1st table
-
         //batch apply program insert
         if (!empty($request->medium)) {
             $choose_program = [];
@@ -908,25 +1274,22 @@ class WebsiteController extends Controller
             applicant_faculty_choose_model::insert($choose_program);
         }
         //batch apply program insert
-
         //2nd table
-        if (!empty($requested_data['post_office']) or !empty($requested_data['home_district']) or !empty($requested_data['division']) or !empty($requested_data['village_name'])) {
+        if (!empty($requested_data['post_office']) or!empty($requested_data['home_district']) or!empty($requested_data['division']) or!empty($requested_data['village_name'])) {
             $applicant_student_child_model = new applicant_student_child_model;
             //            $applicant_student_child_model['parent'] = $requested_data['applicant_id'];
             $applicant_student_child_model['parent'] = $aplicant_student->applicant_id;
             $applicant_student_child_model->fill($request->all())->save();
         }
         //2nd table
-
         //3rd table
-        if (!empty($requested_data['reference_name']) or !empty($requested_data['reference_designation'])) {
+        if (!empty($requested_data['reference_name']) or!empty($requested_data['reference_designation'])) {
             $applicant_student_reference_model = new reference_model();
             //            $applicant_student_reference_model['applicant_id'] = $requested_data['applicant_id'];
             $applicant_student_reference_model['applicant_id'] = $aplicant_student->applicant_id;
             $applicant_student_reference_model->fill($request->all())->save();
         }
         //3rd table
-
         //educationa qualification
         if (count($request->exam_name) > 0) {
             foreach ($request->exam_name as $key => $exam_value) {
@@ -952,7 +1315,6 @@ class WebsiteController extends Controller
             applicant_student_educational_q::insert($qualification_data);
         }
         //educationa qualification
-
         //        dd($requested_data);
         //photo
         if ($request->attached_photo) {
@@ -962,7 +1324,6 @@ class WebsiteController extends Controller
             $request->file('attached_photo')->move($file_path, $fil_name);
         }
         //photo
-
         //Attachments
         if ($request->attached_signature) {
             $file_path = "img/backend/aplicant_student/signature/";
@@ -971,9 +1332,8 @@ class WebsiteController extends Controller
             $request->file('attached_signature')->move($file_path, $fil_name);
         }
         //Attachments
-
         //4th table
-        if (!empty($request->inspection_no) or !empty($request->reference)) {
+        if (!empty($request->inspection_no) or!empty($request->reference)) {
             $office_copy_data = [
                 //                'applicant_id' => $requested_data['applicant_id'],
                 'applicant_id' => $aplicant_student->applicant_id,
@@ -997,8 +1357,7 @@ class WebsiteController extends Controller
         }
     }
 
-    public function AddOnlineAdmission12(Request $request)
-    {
+    public function AddOnlineAdmission12(Request $request) {
         $requested_data = $request->all();
         $requested_data['relation'] = 'Guardian';
         $requested_data['class'] = 'First Semester';
@@ -1021,37 +1380,32 @@ class WebsiteController extends Controller
         }
     }
 
-    public function Gallery()
-    {
+    public function Gallery() {
         $data['gallery'] = WebsiteEventModel::latest()->get();
         return view('website.gallery', $data);
     }
 
-    public function Course($id)
-    {
+    public function Course($id) {
         $data['course'] = WebsiteCourseModel::where('course_category_id', $id)->get();
         return view('website.course', $data);
     }
 
-    public function CourseSingle($id)
-    {
+    public function CourseSingle($id) {
         $data['course'] = WebsiteCourseModel::findOrFail($id);
         return view('website.single_course', $data);
     }
 
-    public function FeesStructure($id)
-    {
+    public function FeesStructure($id) {
         $data['fees_structure'] = WebsiteFeesStuctureModel::where('department', $id)->first();
         return view('website.fees_structure', $data);
     }
 
-    public function MailSent(Request $request)
-    {
+    public function MailSent(Request $request) {
         $validation = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required|numeric',
-            'message' => 'required',
+                    'name' => 'required',
+                    'email' => 'required|email',
+                    'phone' => 'required|numeric',
+                    'message' => 'required',
         ]);
         if ($validation->fails()) {
             return back()->withInput()->withErrors($validation);
@@ -1071,46 +1425,42 @@ class WebsiteController extends Controller
         }
     }
 
-    public function Result()
-    {
+    public function Result() {
         $data['exam'] = exam_list_model::where('publish', 'Yes')->get();
         return view('website.result_index', $data);
     }
-    public function district_filter($id)
-    {
+
+    public function district_filter($id) {
         return districts_model::where('division_id', $id)->get();
     }
-    public function upozila_filter($id)
-    {
+
+    public function upozila_filter($id) {
         return upazilas_model::where('district_id', $id)->get();
     }
 
-    public function unions_filter($id)
-    {
+    public function unions_filter($id) {
         return unions_model::where('upazilla_id', $id)->get();
     }
 
-    public function faculty_department($id)
-    {
-        return manage_department_model::where('medium', $id)->get();
+    public function faculty_department($id) {
+        return manage_department_model::where('faculty_name', $id)->get(); //fixed by akash @6/2/2022 
     }
 
-    public function class_section($id)
-    {
+    public function class_section($id) {
         return manage_section_model::where('class', $id)->get();
     }
 
-    public function department_program($id)
-    {
+    public function department_program($id) {
+
         return manage_class_model::where('class_department', $id)->get();
     }
 
-    public function district_filter1($id)
-    {
+    public function district_filter1($id) {
         return districts_model::where('division_id', $id)->get();
     }
-    public function upozila_filter1($id)
-    {
+
+    public function upozila_filter1($id) {
         return upazilas_model::where('district_id', $id)->get();
     }
+
 }

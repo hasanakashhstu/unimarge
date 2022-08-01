@@ -129,7 +129,8 @@
                     {{ Form::label('image', '', ['class' => 'control-label', 'title' => 'image']) }}
 
                     <div class="controls">
-                        {{ Form::image(Storage::url($bot->image), 'Profile_image', ['alt' => 'Your Image','class' => 'img-responsive img-circle blank_applicant_student_image','id' => 'blah','style' => 'width:19%']) }}
+                        <!-- {{ Form::image(Storage::url($bot->image), 'Profile_image', ['alt' => 'Your Image','class' => 'img-responsive img-circle blank_applicant_student_image','id' => 'blah','style' => 'width:19%']) }} -->
+                        <img src="{{ asset('img/backend/bot/'.$bot->image) }}" width="19%"/>
                         <br>
                         {{ Form::file('image', ['onchange' => 'readURL(this)']) }}
                     </div>

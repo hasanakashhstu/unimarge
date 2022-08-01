@@ -17,10 +17,7 @@ class CreateMetaDataTable extends Migration
             $table->id();
             $table->string('meta_type');
             $table->string('meta_key')->index();
-            $table->string('title')->nullable();
             $table->longText('meta_value')->nullable();
-            $table->unsignedInteger('sort_order')->nullable();
-            $table->unsignedTinyInteger('status')->default('1')->comment('1=active,2=deactivate');
             $table->softDeletes();
             $table->timestamps();
         });

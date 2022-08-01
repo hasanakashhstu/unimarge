@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\MetaData;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class MetaDataController extends Controller
 {
@@ -19,7 +18,7 @@ class MetaDataController extends Controller
         abort_if(!$request->query('type'), 404);
 
         $data['metaType'] = $request->query('type');
-        $data['metaData'] = MetaData::where('meta_type', $data['metaType'])->orderBy('sort_order', 'asc')->get();
+        $data['metaData'] = MetaData::where('meta_type', $data['metaType'])->get();
 
         return view('auth.meta-data.index', $data);
     }
@@ -48,21 +47,11 @@ class MetaDataController extends Controller
     public function update(Request $request, MetaData $metaData)
     {
         $data = $request->validate([
-            'meta_key'   => 'required|string',
-            'title'      => 'nullable|string',
             'meta_value' => 'required|string',
-            'sort_order' => 'nullable|integer|min:1',
         ]);
-
-        $data['meta_key'] = Str::slug($data['meta_key'], '_');
 
         $metaData->update($data);
 
         return redirect()->route('auth.metaData.index', ['type' => $metaData->meta_type])->with(['success' => "$metaData->meta_type updated."]);
-    }
-
-    public function updateStatus(MetaData $metaData)
-    {
-        
     }
 }
