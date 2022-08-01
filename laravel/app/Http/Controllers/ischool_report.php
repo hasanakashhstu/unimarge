@@ -56,14 +56,13 @@ use DB;
 class ischool_report extends Controller {
 
     public function applicant_student_report() {
+       
         abort_if(Auth::user()->cannot('view student'), 403);
+         
         $data['applicant_student'] = DB::table('applicant_student')
-                ->join('manage_department', 'manage_department.id', '=', 'applicant_student.department')
-                ->select('applicant_student.*', 'manage_department.department_name')
+                ->select('applicant_student.*')
                 ->orderBy('applicant_id', 'desc')
                 ->get();
-
-
         return view('admin.students.applicant_student_report', $data);
     }
 
