@@ -1,0 +1,33 @@
+.head{
+    text-align: center;
+    color:#000073;
+}
+.text-center
+{
+    text-align: center;
+}
+img{
+    height: 88px;
+
+}
+#text{
+    font-style: oblique;
+    font-size:20px;
+    font-family: initial;
+}
+
+.im{
+    color: #34495e;
+}
+.sign{
+    float: right;
+    margin-right: 48px;
+    font-size: 14px;
+    font-style: italic;
+    font-family: serif;
+}
+.print-format{
+    background-image: url('../img/border2.png');
+    background-size: 793px 1254px;
+    background-repeat: no-repeat;
+}

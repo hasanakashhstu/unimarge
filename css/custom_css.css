@@ -1,0 +1,62 @@
+table.table.address.block_address tr td div {
+    width: 120px;
+    margin: 0%;
+}
+table.table.address.block_address tr td div select, table.table.address.block_address tr td div input {
+    width: 100%;
+}
+
+table.table.address.block_education tr td div {
+    width: 77px;
+    margin: 0%;
+}
+table.table.address.block_education tr td div select, table.table.address.block_education tr td div input {
+    width: 100%;
+}
+div.heading_inner{
+    width: 100%;
+    clear: both;
+    float: left;
+}
+table.table.address.block_education tr td div.block_education_marksheet,
+table.table.address.block_education tr td div.block_education_marksheet_controls,
+table.table.address.block_education tr td div.block_education_marksheet_controls div#uniform-marksheet{
+    width: 190px;
+    font-size: 10px;
+}
+
+.admin_student.form-horizontal .controls {
+    margin-left: 320px;
+    padding: 10px 0;
+}
+
+.admin_student.form-horizontal .control-label {
+    padding-top: 15px;
+    width: 300px;
+}
+p.inner_heading{
+    font-size: 16px;
+    color: #000000;
+    background: #ccc;
+    width: 20%;
+    margin: 1%;
+    padding: 0.5%;
+    border-radius: 4px;
+    clear: both;
+    float: left;
+}
+.admin_student .table.address th, .admin_student .table.address tr td select, .admin_student .table.address tr td input {
+    width: 100px;
+}
+.admin_student .table.education_history th, .admin_student .table.education_history tr td select, .admin_student .table.education_history tr td input {
+    width: 80px;
+}
+.floatright{
+    float: right;
+}
+.width-100{
+    width: 100%;
+}
+.clear_both{
+    clear:both;
+}

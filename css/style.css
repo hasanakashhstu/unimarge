@@ -1,0 +1,179 @@
+.widget-box.alert.alert-danger.alert-dismissible.fade.in {
+    right: initial;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+}
+
+.alert-danger{
+    right: initial;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+}
+.alert-success{
+    right: initial;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+}
+
+.fade.in {
+    opacity: 1;
+    transition: all 0.9s ease;
+}
+
+.textare_for_transport{width: 60%}
+.address{width: 100%;}
+#a_table{width: 95%}
+.blank_applicant_student_image{width: 19%;}
+
+
+.dropdown_test li {display: inline;}
+        .dropdown_test li a{padding: 10px; background: #666;color: #fff; border-radius: 5px}
+        .dropdown_test li a:hover{padding: 12px; background: #666;color: #fff; border-radius: 5px}
+        .addmission_student_status{width: 50%;}
+        .student_roll_rege{width: 60%; }
+        .roll_reg_width{width:20%;}
+
+        .b_s_name{width: 15%}
+        .b_s_roll{width: 10%}
+        .b_s_reg{width: 10%}
+        .b_s_email{width: 16%}
+        .b_s_password{width: 10%}
+       .b_s_phone{width: 10%}
+       .b_s_gender{width: 10%}
+       .remove_field {margin-bottom: 10px}
+        .add_field_button {margin-bottom: 10px}
+        .promoation{width: 50%; text-align: center;}
+        .chart_account_heading{color: black}
+
+.font_my{font-family: Monaco, Menlo, Consolas, "Courier New", monospace}
+#my_align{text-align:center}
+.display_status{display: inline-flex;}
+
+
+.larger_font_permission{font-size:larger;}
+
+
+/*.body_for_report{font-family:Monaco, Menlo, Consolas, "Courier New", monospace;}
+    .report_class_background{background-color:gray;color: #fff;height: 25px;}
+    .print_report{margin-top: 2%;margin-left: 25%;margin-right: 25%;}
+    .p_tag_report{font-size: 11px;}*/
+.widget-box{width: 95%!important;}
+.alert{top: 3%!important}
+.color_black{color: black}
+
+.table_text{width: 150px;}
+
+
+
+   .tags {
+  list-style: none;
+  margin: 0;
+  overflow: hidden; 
+  padding: 0;
+}
+
+
+.tag {
+  background: crimson;
+  border-radius: 3px 0 0 3px;
+  color: #fff;
+  display: inline-block;
+  height: 26px;
+  line-height: 26px;
+  padding: 0 20px 0 23px;
+  position: relative;
+  margin: 0 10px 10px 0;
+  text-decoration: none;
+  -webkit-transition: color 0.2s;
+}
+
+.tag::before {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
+  content: '';
+  height: 6px;
+  left: 10px;
+  position: absolute;
+  width: 6px;
+  top: 10px;
+}
+
+.tag::after {
+  background: #eeeeee;
+  border-bottom: 13px solid transparent;
+  border-left: 10px solid crimson;
+  border-top: 13px solid transparent;
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.tag:hover {
+  background-color: crimson;
+  color: white;
+}
+
+.tag:hover::after {
+   border-left-color: crimson; 
+}
+
+@media (min-width: 1200px){
+    .container, .navbar-static-top .container, .navbar-fixed-top .container, .navbar-fixed-bottom .container {
+        width: 80vw;
+    }
+}
+
+.widget-box {
+    width: 99%!important;
+}
+
+#sidebar > ul {
+    border-bottom: 1px solid #37414b;
+    max-height: 75vh !important;
+    overflow: auto;
+}
+#sidebar > ul::-webkit-scrollbar {
+    width: 5px;
+}
+#sidebar > ul::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+#sidebar > ul::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    outline: 1px solid slategrey;
+}
+#sidebar > ul li ul li a:hover, #sidebar > ul li ul li.active a {
+    color: #38f109;
+    background-color: transparent !important;
+    font-size: 12px;
+    font-weight: bold;
+}
+.teacher_block,
+.admit_student_block ,
+.applicant_student_block {
+    background: #ffffff;
+    width: 98%;
+    margin: 1%;
+}
+.teacher_block_heading,
+.admit_student_block_heading,
+.applicant_student_block_heading{
+    width: 96%;
+    margin: 1%;
+    font-size: 17px;
+    padding: 10px;
+    background: #666;
+    color: #fff;
+    border-radius: 5px;
+}
+div.completed_credit{
+    background: #EEEEEE;
+    width: 98%;
+    margin: 1%;
+    border-radius: 10px;
+}

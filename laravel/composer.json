@@ -1,0 +1,72 @@
+{
+    "name": "laravel/laravel",
+    "description": "The Laravel Framework.",
+    "keywords": ["framework", "laravel"],
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": "^7.2.5",
+        "laravel/framework": "^7.0",
+        "laravelcollective/html": "^6.0",
+        "vsmoraes/laravel-pdf": "^1.0",
+        "macsidigital/zoom-laravel": "^1.0",
+        "intervention/image": "^2.7",
+        "laravel/tinker": "^2.0",
+        "fideloper/proxy": "^4.0",
+        "spatie/laravel-permission": "^3.5",
+        "maatwebsite/excel": "^3.1",
+        "laravel/helpers": "^1.5",
+        "nunomaduro/collision": "^4.1",
+        "facade/ignition": "^2.0",
+        "laravel/ui": "^2.0",
+        "livewire/livewire": "^2.10"
+    },
+    "require-dev": {
+        "fzaninotto/faker": "~1.4",
+        "mockery/mockery": "0.9.*",
+        "phpunit/phpunit": "^8.5",
+        "symfony/css-selector": "3.1.*",
+        "symfony/dom-crawler": "3.1.*",
+        "filp/whoops": "~2.0",
+        "barryvdh/laravel-debugbar": "^3.6"
+    },
+    "autoload": {
+        "classmap": [
+            "database"
+        ],
+        "files": [
+            "app/Helpers/Helper.php"
+        ],
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-root-package-install": [
+            "php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "php artisan key:generate"
+        ],
+        "post-install-cmd": [
+            "Illuminate\\Foundation\\ComposerScripts::postInstall",
+            "php artisan optimize"
+        ],
+        "post-update-cmd": [
+            "Illuminate\\Foundation\\ComposerScripts::postUpdate",
+            "php artisan optimize"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist"
+    }
+}

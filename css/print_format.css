@@ -1,0 +1,129 @@
+ body{background-color: #fff;margin: 0px;
+ 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;}
+ .print_preview_wrapper{ padding: 30px 0px;
+    background-color: #f5f7fa;
+    text-rendering: optimizeLegibility;
+    width: 75%;
+    margin-left: 13%
+}
+
+.form-print-wrapper{border: 1px solid #d1d8dd;
+    border-top: none;}
+.print-tool-bar{margin: 0px;
+    padding: 10px 0px;
+    border-bottom: 1px solid #d1d8dd;
+    width: 75%;
+    margin-left: 13%;
+    display: inline-flex;
+    }
+.print-preview{    padding: 0px;
+    max-width: 8.3in;
+    margin: auto;
+    min-height: 11.69in;}
+div {
+    display: block;
+}
+
+.print-format{
+	    background-color: white;
+    box-shadow: 0px 0px 9px rgba(0,0,0,0.5);
+    max-width: 8.3in;
+    min-height: 11.69in;
+    padding: 0.75in;
+    margin: auto;
+        font-size: 9pt;
+    font-family: "Helvetica Neue", Helvetica, Arial, "Open Sans", sans-serif;
+    -webkit-print-color-adjust: exact;
+}
+
+.page-break{
+	    display: flex;
+    flex-direction: column;
+        padding: 30px 0px;
+}
+
+.tool-bar-standrad{
+width: 10%
+}
+
+.Langugae{width: 10%}
+.letter-head{width: 56%}
+.tool{float: right}
+
+
+
+
+
+
+.btn-group{
+	position: relative;
+    display: inline-block;
+    vertical-align: middle;}
+
+
+
+
+.btn-group > .btn, .btn-group-vertical > .btn {
+    position: relative;
+    float: left;
+}
+
+
+
+a, a:hover, a:active, a:focus, .btn, .btn:hover, .btn:active, .btn:focus {
+    outline: 0;
+    background: darkgray
+}
+
+.btn-sm, .btn-group-sm > .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.btn-default {
+    color: inherit;
+    background-color: #f0f4f7;
+    border-color: transparent;
+}
+
+.btn {
+    display: inline-block;
+    
+    margin-bottom: 0;
+    
+    font-weight: normal;
+    
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    
+    cursor: pointer;
+    
+    
+    
+    border: 1px solid transparent;
+   
+}
+
+
+.heading-wrapper{    padding: 5px 0px;
+    background-color: #f5f7fa;}
+    .margin{margin-left: 13%;}
+
+.system-wrapper{
+	padding: 30px 0px;
+    background-color: #fff;
+}
+
+.footer{text-align: center;}
+
+.text-center{text-align: center;}
+.details_part{    float: left;
+    width: 70%;}
+    .picture_part{    float: left;
+    width: 30%;}
+
+
+    .footer{vertical-align: bottom;margin-top: 80%}

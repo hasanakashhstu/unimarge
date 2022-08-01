@@ -1,0 +1,68 @@
+@media only screen and (min-width: 960px) {
+    body {
+        background: none;
+    }
+}
+
+#slider {
+    height: auto;
+    width: 100%;
+}
+
+.navbar-header img {
+    width: 84px !important;
+    height: 90px !important;
+    padding: 8px !important;
+    vertical-align: middle !important;
+}
+
+body p {
+    color: inherit !important;
+}
+
+.navbar-nav > li {
+    border: 0px !important;
+}
+
+nav.navbar.navbar-inverse.main-color-2-bg .container > .navbar-header {
+    /*padding-top: 30px;*/
+}
+
+#main-nav .navbar-nav > li > a {
+    padding-top: 30px !important;
+    padding-bottom: 30px !important;
+    padding-right: 5px !important;
+    line-height: 20px !important;
+}
+
+.dropdown-menu li {
+    border-bottom: #ffffff 1px solid !important;
+}
+
+.navbar-nav > li > .dropdown-menu, .dropdown-submenu ul {
+    background: rgba(0, 0, 0, .9) !important;
+    padding: 0px !important;
+    border-radius: 0px !important;
+}
+
+.navbar-nav > li > .dropdown-menu li a:hover {
+    color: #595959 !important;
+}
+
+.navbar-nav li a {
+    font-size: inherit;
+}
+
+.navbar-nav > li:hover {
+    background: transparent !important;
+}
+
+.topnav-sidebar a {
+    padding: 13px 15px !important;
+    height: 38px;
+}
+
+div.carousel.slide img {
+    width: 270px;
+    height: 180px !important;
+}

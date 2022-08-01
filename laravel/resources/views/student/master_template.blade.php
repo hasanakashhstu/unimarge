@@ -1,0 +1,5 @@
+@include('layouts.student_dashboard_css_link')
+@include('layouts.student_dasboard_menubar_file')
+@include('layouts.student_dashboard_with_content')
+@include('layouts.css_link')
+@include('layouts.js_link')
