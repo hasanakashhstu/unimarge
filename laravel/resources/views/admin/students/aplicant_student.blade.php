@@ -167,7 +167,7 @@
                                       <select class="form-control" id="" name="department"  >
                                         <option value="" >--select--</option>
                                         @foreach ($department_name as $department_name_list)
-                                        <option value="{{ $department_name_list->department_name }}">{{ $department_name_list->department_name }}</option>
+                                        <option value="{{ $department_name_list->id }}">{{ $department_name_list->department_name }}</option>
                                         @endforeach
                                     </select>
                                     </div>
@@ -273,7 +273,7 @@
                                         <select class="form-control" id="" name="nationality" >
                                             <option value="" >--Select--</option>
                                             @foreach ($nationality_data as $nationality_data_list)
-                                            <option value="{{ $nationality_data_list->name }} ">{{ $nationality_data_list->name }}</option>
+                                            <option value="{{ $nationality_data_list->id }} ">{{ $nationality_data_list->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -294,7 +294,7 @@
                                         <select class="form-control" id="" name="maritial" >
                                             <option value="" >--Select--</option>
                                             @foreach ($maritial_data as $maritial_data_list)
-                                            <option value="{{ $maritial_data_list->name }} ">{{ $maritial_data_list->name }}</option>
+                                            <option value="{{ $maritial_data_list->id }} ">{{ $maritial_data_list->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -314,7 +314,7 @@
                                             <select class="form-control" id="" name="blood_group" >
                                                 <option value="" >--Select--</option>
                                                 @foreach ($blood_group_data as $blood_group_data_list)
-                                                <option value="{{ $blood_group_data_list->name }} ">{{ $blood_group_data_list->name }}</option>
+                                                <option value="{{ $blood_group_data_list->id }} ">{{ $blood_group_data_list->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
