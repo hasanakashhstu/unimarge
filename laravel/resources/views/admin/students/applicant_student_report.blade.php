@@ -83,7 +83,7 @@
                                 <td>{{ $applicant_student_data->student_name }}</td>
                                 <td>{{ $applicant_student_data->degree_name }}</td>
                                 <td>{{ $applicant_student_data->session_choose }}</td>
-                                <td>{{ $applicant_student_data->department }}</td>
+                                <td>{{ $applicant_student_data->department_name }}</td>
                                 <td>{{ $applicant_student_data->email }}</td>
                                 <td>{{ $applicant_student_data->phone }}</td>
                                 <td>{{ $applicant_student_data->status }}</td>
